@@ -8,5 +8,5 @@ export default function AppLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="">{children}</div>;
+  return <div className="w-full">{children}</div>;
 }

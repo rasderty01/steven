@@ -2,17 +2,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  Calendar,
-  Command,
-  Home,
-  Inbox,
-  Loader2,
-  Settings2,
-} from "lucide-react";
+import { Calendar, Command, Home, Inbox, Settings2 } from "lucide-react";
 import * as React from "react";
 
-import { NavFavorites } from "@/components/nav-favorites";
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavWorkspaces } from "@/components/nav-workspaces";
@@ -25,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/utils/supabase/database.types";
+import { Skeleton } from "./ui/skeleton";
 
 type Event = Database["public"]["Tables"]["Event"]["Row"];
 type WorkspaceType = {
@@ -144,23 +137,42 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
     : [];
 
   // Mock favorites for now
-  const favorites = [
-    {
-      name: "Annual Conference 2024",
-      url: "/[orgId]/events/1",
-      emoji: "🎯",
-    },
-    {
-      name: "Team Building Workshop",
-      url: "/events/2",
-      emoji: "🤝",
-    },
-  ];
+  // const favorites = [
+  //   {
+  //     name: "Annual Conference 2024",
+  //     url: "/[orgId]/events/1",
+  //     emoji: "🎯",
+  //   },
+  //   {
+  //     name: "Team Building Workshop",
+  //     url: "/events/2",
+  //     emoji: "🤝",
+  //   },
+  // ];
 
   if (isLoadingOrg || isLoadingEvents) {
     return (
-      <div className="flex h-screen w-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex h-screen w-64 flex-col gap-4 p-4">
+        {/* Organization skeleton */}
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-10 w-10 rounded-md" />
+          <Skeleton className="h-4 w-[120px]" />
+        </div>
+
+        {/* Navigation items skeleton */}
+        <div className="space-y-2 py-4">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </div>
+
+        {/* Events section skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-[100px]" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </div>
       </div>
     );
   }
@@ -172,7 +184,7 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
         <NavMain items={navigationData.navMain} orgId={orgId} />
       </SidebarHeader>
       <SidebarContent>
-        <NavFavorites favorites={favorites} />
+        {/* <NavFavorites favorites={favorites} /> */}
         <NavWorkspaces workspaces={workspaces} />
         <NavSecondary
           items={navigationData.navSecondary}

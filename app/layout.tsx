@@ -25,7 +25,7 @@ export default function RootLayout({
       className={geistSans.className}
       suppressHydrationWarning={true}
     >
-      <body className="bg-background text-foreground flex min-h-screen items-center justify-center">
+      <body className="bg-background text-foreground flex min-h-screen items-center justify-center w-full">
         <ReactQueryProvider>
           <ThemeProvider
             attribute="class"

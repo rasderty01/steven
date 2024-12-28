@@ -1,6 +1,6 @@
 // app/(app)/[orgId]/create/page.tsx
 
-import { CreateOrgForm } from "@/components/organizations/create-org-form";
+import { CreateOrgForm } from "@/components/forms/create-org-form";
 import { PageHeader } from "@/components/page-header";
 import {
   Card,
