@@ -1,5 +1,4 @@
-import { ChevronRight, MoreHorizontal, Plus } from "lucide-react";
-
+"use client";
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,24 +16,51 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { ChevronRight, MoreHorizontal, Plus } from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useState } from "react";
 
-export function NavWorkspaces({
-  workspaces,
-  onPageClick,
-}: {
-  workspaces: {
+type WorkspaceType = {
+  name: string;
+  emoji: React.ReactNode;
+  pages: {
+    id: number;
     name: string;
     emoji: React.ReactNode;
-    pages: {
-      name: string;
-      emoji: React.ReactNode;
-    }[];
   }[];
+};
+
+interface NavEventsProps {
+  workspaces: WorkspaceType[];
   onPageClick?: (pageName: string) => void;
-}) {
+}
+
+export function NavWorkspaces({ workspaces, onPageClick }: NavEventsProps) {
+  const [showAllEvents, setShowAllEvents] = useState(false);
+  const { orgId } = useParams();
+
+  // Calculate total number of events across all workspaces
+  const totalEvents = workspaces.reduce(
+    (total, workspace) => total + workspace.pages.length,
+    0
+  );
+
+  // Function to limit pages in each workspace
+  const getLimitedPages = (pages: WorkspaceType["pages"]) => {
+    if (showAllEvents) {
+      return pages;
+    }
+    return pages.slice(0, 5);
+  };
+
+  const handleMoreClick = () => {
+    setShowAllEvents(!showAllEvents);
+  };
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Workspaces</SidebarGroupLabel>
+      <SidebarGroupLabel>Events</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {workspaces.map((workspace) => (
@@ -59,16 +85,16 @@ export function NavWorkspaces({
                 </SidebarMenuAction>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {workspace.pages.map((page) => (
+                    {getLimitedPages(workspace.pages).map((page) => (
                       <SidebarMenuSubItem key={page.name}>
                         <SidebarMenuSubButton
                           asChild
                           onClick={() => onPageClick?.(page.name)}
                         >
-                          <div>
+                          <Link href={`/${orgId}/events/${page.id}`}>
                             <span>{page.emoji}</span>
                             <span>{page.name}</span>
-                          </div>
+                          </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
@@ -77,12 +103,17 @@ export function NavWorkspaces({
               </SidebarMenuItem>
             </Collapsible>
           ))}
-          <SidebarMenuItem>
-            <SidebarMenuButton className="text-sidebar-foreground/70">
-              <MoreHorizontal />
-              <span>More</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {totalEvents > 5 && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="text-sidebar-foreground/70"
+                onClick={handleMoreClick}
+              >
+                <MoreHorizontal />
+                <span>{showAllEvents ? "Less" : "More"}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

@@ -29,12 +29,14 @@ export const updateSession = async (request: NextRequest) => {
   );
 
   const path = request.nextUrl.pathname;
+  const pathSegments = path.split("/").filter(Boolean);
+
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
-  // Public routes
+  // Public routes that don't require authentication
   const isPublicRoute =
     path === "/" ||
     path.startsWith("/e/") ||
@@ -69,19 +71,23 @@ export const updateSession = async (request: NextRequest) => {
     return NextResponse.redirect(new URL("/create-org", request.url));
   }
 
-  // Organization access check
-  const orgId = path.split("/")[3]; // /dashboard/organizations/[orgId]
-  if (orgId && !isNaN(Number(orgId))) {
-    const { data: memberData } = await supabase
-      .from("OrganizationMember")
-      .select("role")
-      .match({ userId: user.id, orgId })
-      .single();
+  // Check if the route is organization-scoped
+  if (pathSegments.length >= 1) {
+    const potentialOrgId = pathSegments[0];
 
-    if (!memberData) {
-      return userData?.orgId
-        ? NextResponse.redirect(new URL(`/${userData.orgId}`, request.url))
-        : NextResponse.redirect(new URL("/create-org", request.url));
+    // If the first segment is a number (organization ID)
+    if (!isNaN(Number(potentialOrgId))) {
+      const { data: memberData } = await supabase
+        .from("OrganizationMember")
+        .select("role")
+        .match({ userId: user.id, orgId: potentialOrgId })
+        .single();
+
+      if (!memberData) {
+        return userData?.orgId
+          ? NextResponse.redirect(new URL(`/${userData.orgId}`, request.url))
+          : NextResponse.redirect(new URL("/create-org", request.url));
+      }
     }
   }
 

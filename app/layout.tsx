@@ -1,5 +1,6 @@
 // app/layout.tsx
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { Geist } from "next/font/google";
 import "./globals.css";
@@ -34,6 +35,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster />
           </ThemeProvider>
         </ReactQueryProvider>
       </body>

@@ -1,9 +1,4 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
+// app/[orgId]/page.tsx
 import {
   Card,
   CardContent,
@@ -11,8 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { AlertCircle, Calendar, Users } from "lucide-react";
 import { Suspense } from "react";
+
+import { ActivityFeed } from "@/components/organization/activity-feed";
+import { QuickActions } from "@/components/organization/quick-actionts";
+import { getOrganizationData } from "@/lib/actions/organization";
+import { notFound } from "next/navigation";
 
 interface PageProps {
   params: {
@@ -23,24 +23,19 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
   const { orgId } = await params;
 
-  return (
-    <>
-      <header className="flex h-14 shrink-0 items-center gap-2">
-        <div className="flex flex-1 items-center gap-2 px-3">
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbPage>Dashboard</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </header>
+  try {
+    const { organization, stats } = await getOrganizationData(orgId);
 
+    if (!organization) {
+      notFound();
+    }
+
+    return (
       <main className="flex-1 space-y-4 p-4 md:p-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {organization.name} Dashboard
+          </h1>
         </div>
 
         <Suspense fallback={<div>Loading stats...</div>}>
@@ -48,45 +43,66 @@ export default async function Page({ params }: PageProps) {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Users
+                  Total Members
                 </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">128</div>
+                <div className="text-2xl font-bold">{stats.memberCount}</div>
                 <p className="text-xs text-muted-foreground">
-                  +10% from last month
+                  Active organization members
                 </p>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Active Projects
+                  Active Events
                 </CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
+                <div className="text-2xl font-bold">
+                  {stats.activeEventsCount}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  3 pending approval
+                  Currently running events
                 </p>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Events</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Event Limit
+                </CardTitle>
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">24</div>
-                <p className="text-xs text-muted-foreground">8 upcoming</p>
+                <div className="text-2xl font-bold">
+                  {organization.event_limit}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Maximum allowed events
+                </p>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Guest Limit
+                </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">64</div>
-                <p className="text-xs text-muted-foreground">12 due today</p>
+                <div className="text-2xl font-bold">
+                  {organization.guest_limit_per_event}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Guests per event limit
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -102,7 +118,7 @@ export default async function Page({ params }: PageProps) {
             </CardHeader>
             <CardContent>
               <Suspense fallback={<div>Loading activity...</div>}>
-                {/* Activity feed will go here */}
+                <ActivityFeed events={stats.recentEvents} />
               </Suspense>
             </CardContent>
           </Card>
@@ -114,14 +130,17 @@ export default async function Page({ params }: PageProps) {
             </CardHeader>
             <CardContent>
               <Suspense fallback={<div>Loading actions...</div>}>
-                {/* Quick actions will go here */}
+                <QuickActions orgId={orgId} />
               </Suspense>
             </CardContent>
           </Card>
         </div>
       </main>
-    </>
-  );
+    );
+  } catch (error) {
+    console.error("Error loading organization:", error);
+    notFound();
+  }
 }
 
 export const metadata = {

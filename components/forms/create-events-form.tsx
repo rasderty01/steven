@@ -30,11 +30,6 @@ export function CreateEventForm({ orgId }: CreateEventFormProps) {
   const form = useForm<CreateEventFormData>({
     resolver: zodResolver(createEventSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      location: "",
-      startTime: new Date(),
-      endTime: new Date(),
       isVirtual: false,
     },
   });

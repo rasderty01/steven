@@ -36,7 +36,7 @@ export function CreateOrgForm() {
         throw new Error(result.error);
       }
       toast.success("Organization created successfully!");
-      router.push(`/${result.data.id}`);
+      router.push(`/${result.data?.id}`);
     },
     onError: (error) => {
       toast.error(

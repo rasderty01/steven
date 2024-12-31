@@ -12,11 +12,13 @@ import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/utils/supabase/database.types";
+import { NavUser } from "./nav-user";
 import { Skeleton } from "./ui/skeleton";
 
 type Event = Database["public"]["Tables"]["Event"]["Row"];
@@ -24,11 +26,11 @@ type WorkspaceType = {
   name: string;
   emoji: React.ReactNode;
   pages: {
+    id: number;
     name: string;
     emoji: React.ReactNode;
   }[];
 };
-type Organization = Database["public"]["Tables"]["Organization"]["Row"];
 
 // Navigation data
 const navigationData = {
@@ -52,7 +54,7 @@ const navigationData = {
   navSecondary: [
     {
       title: "Settings",
-      url: "/[orgId]/settings",
+      url: "/[orgId]/settings/profile",
       icon: Settings2,
     },
   ],
@@ -66,19 +68,42 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
   const supabase = createClient();
 
   // Query for organization details
-  const { data: organization, isLoading: isLoadingOrg } = useQuery({
-    queryKey: ["organization", orgId],
+  // Query for all organizations where the user is a member
+  const { data: organizations, isLoading: isLoadingOrg } = useQuery({
+    queryKey: ["organizations"],
     queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) throw new Error("No user found");
+
       const { data, error } = await supabase
-        .from("Organization")
-        .select("*")
-        .eq("id", orgId)
-        .single();
+        .from("OrganizationMember")
+        .select(
+          `
+        organization:Organization(
+          id,
+          name,
+          description
+        ),
+        User!inner(
+          subscriptionStatus
+        )
+      `
+        )
+        .eq("userId", user.id);
 
       if (error) throw error;
-      return data;
+      return (
+        data?.map((item) => ({
+          id: item.organization.id,
+          name: item.organization.name,
+          logo: Command,
+          plan: item.User.subscriptionStatus,
+        })) ?? []
+      );
     },
-    enabled: !!orgId,
   });
 
   // Query for events in the organization
@@ -105,6 +130,7 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
       emoji: "📅" as React.ReactNode,
       pages: events
         ? events.map((event) => ({
+            id: event.id,
             name: event.title,
             emoji: (event.status === "Draft" ? "📝" : "📅") as React.ReactNode,
           }))
@@ -117,38 +143,13 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
         ? events
             .filter((event) => new Date(event.startTime) > new Date())
             .map((event) => ({
+              id: event.id,
               name: event.title,
               emoji: "📅" as React.ReactNode,
             }))
         : [],
     },
   ];
-
-  // Transform organization for team switcher
-  const teams = organization
-    ? [
-        {
-          id: organization.id,
-          name: organization.name,
-          logo: Command,
-          plan: "Enterprise",
-        },
-      ]
-    : [];
-
-  // Mock favorites for now
-  // const favorites = [
-  //   {
-  //     name: "Annual Conference 2024",
-  //     url: "/[orgId]/events/1",
-  //     emoji: "🎯",
-  //   },
-  //   {
-  //     name: "Team Building Workshop",
-  //     url: "/events/2",
-  //     emoji: "🤝",
-  //   },
-  // ];
 
   if (isLoadingOrg || isLoadingEvents) {
     return (
@@ -180,7 +181,7 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
   return (
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={teams} />
+        <TeamSwitcher teams={organizations ?? []} currentOrgId={orgId} />
         <NavMain items={navigationData.navMain} orgId={orgId} />
       </SidebarHeader>
       <SidebarContent>
@@ -192,6 +193,9 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
           orgId={orgId}
         />
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
