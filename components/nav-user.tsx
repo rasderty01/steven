@@ -29,7 +29,11 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-export function NavUser() {
+interface User {
+  orgId: string;
+}
+
+export function NavUser({ orgId }: { orgId: string }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
   const supabase = createClient();
@@ -140,7 +144,9 @@ export function NavUser() {
               <>
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    onClick={() => handleNavigation("/settings/billing")}
+                    onClick={() =>
+                      handleNavigation(`/${orgId}/settings/billing`)
+                    }
                   >
                     <Sparkles className="mr-2 h-4 w-4" />
                     Upgrade to Pro
@@ -151,19 +157,21 @@ export function NavUser() {
             )}
             <DropdownMenuGroup>
               <DropdownMenuItem
-                onClick={() => handleNavigation("/settings/account")}
+                onClick={() => handleNavigation(`/${orgId}/settings/profile`)}
               >
                 <BadgeCheck className="mr-2 h-4 w-4" />
-                Account
+                My Profile
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleNavigation("/settings/billing")}
+                onClick={() => handleNavigation(`/${orgId}/settings/billing`)}
               >
                 <CreditCard className="mr-2 h-4 w-4" />
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleNavigation("/settings/notifications")}
+                onClick={() =>
+                  handleNavigation(`/${orgId}/settings/notifications`)
+                }
               >
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications

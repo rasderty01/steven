@@ -194,7 +194,7 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
         />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        <NavUser orgId={orgId} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

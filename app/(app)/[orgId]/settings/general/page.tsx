@@ -7,7 +7,7 @@ interface PageProps {
   };
 }
 export default async function GeneralPage({ params }: PageProps) {
-  const { orgId } = params;
+  const { orgId } = await params;
   const { organization } = await getOrganizationData(orgId);
 
   return (

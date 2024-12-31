@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 export default async function SettingsPage({ params }: PageProps) {
-  const { orgId } = params;
+  const { orgId } = await params;
   const { organization } = await getOrganizationData(orgId);
 
   return (

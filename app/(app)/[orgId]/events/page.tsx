@@ -1,5 +1,4 @@
-import { Suspense } from "react";
-
+// app/[orgId]/events/page.tsx
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +15,30 @@ import { createServer } from "@/utils/supabase/server";
 import { formatDistanceToNow } from "date-fns";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+
 type Event = Database["public"]["Tables"]["Event"]["Row"];
+type OrgRole = Database["public"]["Enums"]["OrgRole"];
+
+async function getUserRole(orgId: string) {
+  const supabase = await createServer();
+
+  // Get current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  // Get user's role in the organization
+  const { data: memberData } = await supabase
+    .from("OrganizationMember")
+    .select("role")
+    .eq("userId", user.id)
+    .eq("orgId", orgId)
+    .single();
+
+  return memberData?.role as OrgRole | null;
+}
 
 async function getEvents(orgId: string) {
   const supabase = await createServer();
@@ -139,13 +161,18 @@ export default async function EventsPage({
   params: { orgId: string };
 }) {
   const { orgId } = await params;
+  const userRole = await getUserRole(orgId);
+  const canCreateEvent = userRole === "Owner" || userRole === "Admin";
+
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Events</h1>
-        <Link href={`/${orgId}/events/create`}>
-          <Button>Create New Event</Button>
-        </Link>
+        {canCreateEvent && (
+          <Link href={`/${orgId}/events/create`}>
+            <Button>Create New Event</Button>
+          </Link>
+        )}
       </div>
 
       <Suspense fallback={<EventsSkeleton />}>

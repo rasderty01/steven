@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/utils/supabase/database.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -13,6 +14,7 @@ type Organization = Database["public"]["Tables"]["Organization"]["Row"];
 
 export function GeneralTab({ organization }: { organization: Organization }) {
   const supabase = createClient();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -35,6 +37,7 @@ export function GeneralTab({ organization }: { organization: Organization }) {
         queryKey: ["organization", organization.id],
       });
       toast.success("Organization settings updated");
+      window.location.reload();
     },
     onError: () => {
       toast.error("Failed to update organization settings");
