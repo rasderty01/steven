@@ -1,6 +1,14 @@
 import { Separator } from "@/components/ui/separator";
+import { checkRole } from "@/utils/auth";
+interface PageProps {
+  params: {
+    orgId: string;
+  };
+}
+export default async function TeamsPage({ params }: PageProps) {
+  const { orgId } = await params;
 
-export default function TeamsPage() {
+  await checkRole(orgId, ["Owner", "Admin"]);
   return (
     <div className="space-y-6">
       <div>

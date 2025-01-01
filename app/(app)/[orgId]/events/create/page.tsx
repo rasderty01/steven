@@ -1,4 +1,5 @@
 import { CreateEventForm } from "@/components/forms/create-events-form";
+import { checkRole } from "@/utils/auth";
 import { Suspense } from "react";
 
 interface PageProps {
@@ -9,6 +10,8 @@ interface PageProps {
 
 export default async function Page({ params }: PageProps) {
   const { orgId } = await params;
+
+  await checkRole(orgId, ["Owner", "Admin"]);
 
   return (
     <>
