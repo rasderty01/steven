@@ -19,7 +19,7 @@ export default function Page() {
               </p>
               <div className="space-x-4">
                 <Button asChild>
-                  <Link href="/login">Get Started</Link>
+                  <Link href="/sign-in">Get Started</Link>
                 </Button>
                 <Button variant="outline">Learn More</Button>
               </div>
