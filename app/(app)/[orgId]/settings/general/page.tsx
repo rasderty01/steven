@@ -11,7 +11,7 @@ export default async function GeneralPage({ params }: PageProps) {
   const { orgId } = await params;
   const { organization } = await getOrganizationData(orgId);
 
-  await checkRole(params.orgId, ["Owner"]);
+  await checkRole(orgId, ["Owner"]);
 
   return (
     <div className="space-y-6 w-full">
