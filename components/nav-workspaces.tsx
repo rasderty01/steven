@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -6,116 +7,117 @@ import {
 } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { ChevronRight, MoreHorizontal, Plus } from "lucide-react";
+import {
+  ChevronRight,
+  CreditCard,
+  Layout,
+  Mail,
+  MoreHorizontal,
+  Settings,
+  Truck,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useState } from "react";
 
-type WorkspaceType = {
+type Event = {
+  id: number;
   name: string;
   emoji: React.ReactNode;
-  pages: {
-    id: number;
-    name: string;
-    emoji: React.ReactNode;
-  }[];
 };
 
 interface NavEventsProps {
-  workspaces: WorkspaceType[];
+  events: Event[];
   onPageClick?: (pageName: string) => void;
 }
 
-export function NavWorkspaces({ workspaces, onPageClick }: NavEventsProps) {
+const eventOptions = [
+  { title: "Overview", url: "", icon: Layout },
+  { title: "Reports", url: "/reports", icon: CreditCard },
+  { title: "Suppliers", url: "/suppliers", icon: Truck },
+  { title: "Guests", url: "/guests", icon: Users },
+  { title: "Seat Plan", url: "/seatplan", icon: Layout },
+  { title: "Event Page", url: "/eventpage", icon: Settings },
+  { title: "RSVP", url: "/rsvp", icon: Mail },
+];
+
+export function NavEvents({ events, onPageClick }: NavEventsProps) {
   const [showAllEvents, setShowAllEvents] = useState(false);
   const { orgId } = useParams();
+  const pathname = usePathname();
 
-  // Calculate total number of events across all workspaces
-  const totalEvents = workspaces.reduce(
-    (total, workspace) => total + workspace.pages.length,
-    0
-  );
-
-  // Function to limit pages in each workspace
-  const getLimitedPages = (pages: WorkspaceType["pages"]) => {
-    if (showAllEvents) {
-      return pages;
-    }
-    return pages.slice(0, 5);
+  const getLimitedEvents = () => {
+    return showAllEvents ? events : events.slice(0, 5);
   };
 
-  const handleMoreClick = () => {
-    setShowAllEvents(!showAllEvents);
+  const isEventOptionActive = (eventId: number, optionPath: string) => {
+    return pathname === `/${orgId}/events/${eventId}${optionPath}`;
   };
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Events</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {workspaces.map((workspace) => (
-            <Collapsible key={workspace.name}>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <div>
-                    <span>{workspace.emoji}</span>
-                    <span>{workspace.name}</span>
-                  </div>
-                </SidebarMenuButton>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuAction
-                    className="left-2 bg-sidebar-accent text-sidebar-accent-foreground data-[state=open]:rotate-90"
-                    showOnHover
-                  >
-                    <ChevronRight />
-                  </SidebarMenuAction>
-                </CollapsibleTrigger>
-                <SidebarMenuAction showOnHover>
-                  <Plus />
-                </SidebarMenuAction>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {getLimitedPages(workspace.pages).map((page) => (
-                      <SidebarMenuSubItem key={page.name}>
-                        <SidebarMenuSubButton
-                          asChild
-                          onClick={() => onPageClick?.(page.name)}
-                        >
-                          <Link href={`/${orgId}/events/${page.id}`}>
-                            <span>{page.emoji}</span>
-                            <span>{page.name}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          ))}
-          {totalEvents > 5 && (
+      <SidebarMenu>
+        {getLimitedEvents().map((event) => (
+          <Collapsible
+            key={event.id}
+            asChild
+            defaultOpen={false}
+            className="group/collapsible"
+          >
             <SidebarMenuItem>
-              <SidebarMenuButton
-                className="text-sidebar-foreground/70"
-                onClick={handleMoreClick}
-              >
-                <MoreHorizontal />
-                <span>{showAllEvents ? "Less" : "More"}</span>
-              </SidebarMenuButton>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip={event.name}>
+                  {event.emoji}
+                  <span>{event.name}</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {eventOptions.map((option) => (
+                    <SidebarMenuSubItem key={option.url}>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={isEventOptionActive(event.id, option.url)}
+                      >
+                        <Link
+                          href={`/${orgId}/events/${event.id}${option.url}`}
+                        >
+                          <option.icon className="h-4 w-4" />
+                          <span>{option.title}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
             </SidebarMenuItem>
-          )}
-        </SidebarMenu>
-      </SidebarGroupContent>
+          </Collapsible>
+        ))}
+        {events.length > 5 && (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => setShowAllEvents(!showAllEvents)}
+              tooltip={showAllEvents ? "Show less" : "Show more"}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+              <span>{showAllEvents ? "Less" : "More"}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
+      </SidebarMenu>
     </SidebarGroup>
   );
 }
+
+export default NavEvents;

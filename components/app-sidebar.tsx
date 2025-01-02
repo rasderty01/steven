@@ -1,13 +1,12 @@
-// components/app-sidebar.tsx
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Command, Home, Inbox, Settings2 } from "lucide-react";
+import { Calendar, Command, Home, Inbox, Settings2, Truck } from "lucide-react";
 import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
-import { NavWorkspaces } from "@/components/nav-workspaces";
+import { NavEvents } from "@/components/nav-workspaces";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
@@ -22,15 +21,6 @@ import { NavUser } from "./nav-user";
 import { Skeleton } from "./ui/skeleton";
 
 type Event = Database["public"]["Tables"]["Event"]["Row"];
-type WorkspaceType = {
-  name: string;
-  emoji: React.ReactNode;
-  pages: {
-    id: number;
-    name: string;
-    emoji: React.ReactNode;
-  }[];
-};
 
 // Navigation data
 const navigationData = {
@@ -50,6 +40,11 @@ const navigationData = {
       url: "/[orgId]/calendar",
       icon: Calendar,
     },
+    {
+      title: "Suppliers",
+      url: "/[orgId]/suppliers",
+      icon: Truck,
+    },
   ],
   navSecondary: [
     {
@@ -68,7 +63,6 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
   const supabase = createClient();
 
   // Query for organization details
-  // Query for all organizations where the user is a member
   const { data: organizations, isLoading: isLoadingOrg } = useQuery({
     queryKey: ["organizations"],
     queryFn: async () => {
@@ -123,33 +117,15 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
     enabled: !!orgId,
   });
 
-  // Transform events for workspaces
-  const workspaces: WorkspaceType[] = [
-    {
-      name: "All Events",
-      emoji: "📅" as React.ReactNode,
-      pages: events
-        ? events.map((event) => ({
-            id: event.id,
-            name: event.title,
-            emoji: (event.status === "Draft" ? "📝" : "📅") as React.ReactNode,
-          }))
-        : [],
-    },
-    {
-      name: "Upcoming Events",
-      emoji: "🎯" as React.ReactNode,
-      pages: events
-        ? events
-            .filter((event) => new Date(event.startTime) > new Date())
-            .map((event) => ({
-              id: event.id,
-              name: event.title,
-              emoji: "📅" as React.ReactNode,
-            }))
-        : [],
-    },
-  ];
+  // Transform events directly without workspace wrapper
+  const transformedEvents = events
+    ? events.map((event) => ({
+        id: event.id,
+        name: event.title,
+        emoji: (event.status === "Draft" ? "📝" : "📅") as React.ReactNode,
+        startTime: event.startTime,
+      }))
+    : [];
 
   if (isLoadingOrg || isLoadingEvents) {
     return (
@@ -185,8 +161,12 @@ export function AppSidebar({ orgId, ...props }: AppSidebarProps) {
         <NavMain items={navigationData.navMain} orgId={orgId} />
       </SidebarHeader>
       <SidebarContent>
-        {/* <NavFavorites favorites={favorites} /> */}
-        <NavWorkspaces workspaces={workspaces} />
+        <NavEvents
+          events={transformedEvents}
+          onPageClick={(pageName) => {
+            console.log("Page clicked:", pageName);
+          }}
+        />
         <NavSecondary
           items={navigationData.navSecondary}
           className="mt-auto"

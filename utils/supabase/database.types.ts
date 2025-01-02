@@ -186,44 +186,66 @@ export type Database = {
           },
         ]
       }
-      EventAccess: {
+      EventSupplier: {
         Row: {
+          agreedRate: number
           createdAt: string
+          endTime: string
           eventId: number
           id: number
-          permissions: Database["public"]["Enums"]["EventPermissions"][]
+          notes: string | null
+          startTime: string
+          status: Database["public"]["Enums"]["SupplierStatus"]
+          supplierId: number
+          supplierServiceId: number
           updatedAt: string
-          userId: string
         }
         Insert: {
+          agreedRate: number
           createdAt?: string
+          endTime: string
           eventId: number
           id?: number
-          permissions: Database["public"]["Enums"]["EventPermissions"][]
+          notes?: string | null
+          startTime: string
+          status?: Database["public"]["Enums"]["SupplierStatus"]
+          supplierId: number
+          supplierServiceId: number
           updatedAt?: string
-          userId: string
         }
         Update: {
+          agreedRate?: number
           createdAt?: string
+          endTime?: string
           eventId?: number
           id?: number
-          permissions?: Database["public"]["Enums"]["EventPermissions"][]
+          notes?: string | null
+          startTime?: string
+          status?: Database["public"]["Enums"]["SupplierStatus"]
+          supplierId?: number
+          supplierServiceId?: number
           updatedAt?: string
-          userId?: string
         }
         Relationships: [
           {
-            foreignKeyName: "EventAccess_eventId_fkey"
+            foreignKeyName: "EventSupplier_eventId_fkey"
             columns: ["eventId"]
             isOneToOne: false
             referencedRelation: "Event"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "EventAccess_userId_fkey"
-            columns: ["userId"]
+            foreignKeyName: "EventSupplier_supplierId_fkey"
+            columns: ["supplierId"]
             isOneToOne: false
-            referencedRelation: "User"
+            referencedRelation: "Supplier"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventSupplier_supplierServiceId_fkey"
+            columns: ["supplierServiceId"]
+            isOneToOne: false
+            referencedRelation: "SupplierService"
             referencedColumns: ["id"]
           },
         ]
@@ -462,44 +484,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "User"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      Logistics: {
-        Row: {
-          avSetup: string
-          catering: string
-          createdAt: string
-          eventId: number | null
-          id: number
-          updatedAt: string
-          vendors: string
-        }
-        Insert: {
-          avSetup: string
-          catering: string
-          createdAt?: string
-          eventId?: number | null
-          id?: number
-          updatedAt?: string
-          vendors: string
-        }
-        Update: {
-          avSetup?: string
-          catering?: string
-          createdAt?: string
-          eventId?: number | null
-          id?: number
-          updatedAt?: string
-          vendors?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "Logistics_eventId_fkey"
-            columns: ["eventId"]
-            isOneToOne: false
-            referencedRelation: "Event"
             referencedColumns: ["id"]
           },
         ]
@@ -839,6 +823,101 @@ export type Database = {
           },
         ]
       }
+      Supplier: {
+        Row: {
+          address: string | null
+          category: Database["public"]["Enums"]["SupplierCategory"]
+          contactName: string
+          createdAt: string
+          description: string | null
+          email: string
+          id: number
+          isVerified: boolean | null
+          name: string
+          phone: string
+          rating: number | null
+          updatedAt: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          category: Database["public"]["Enums"]["SupplierCategory"]
+          contactName: string
+          createdAt?: string
+          description?: string | null
+          email: string
+          id?: number
+          isVerified?: boolean | null
+          name: string
+          phone: string
+          rating?: number | null
+          updatedAt?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: Database["public"]["Enums"]["SupplierCategory"]
+          contactName?: string
+          createdAt?: string
+          description?: string | null
+          email?: string
+          id?: number
+          isVerified?: boolean | null
+          name?: string
+          phone?: string
+          rating?: number | null
+          updatedAt?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      SupplierService: {
+        Row: {
+          baseRate: number
+          createdAt: string
+          description: string | null
+          id: number
+          maximumHours: number | null
+          minimumHours: number | null
+          name: string
+          rateType: Database["public"]["Enums"]["RateType"]
+          supplierId: number
+          updatedAt: string
+        }
+        Insert: {
+          baseRate: number
+          createdAt?: string
+          description?: string | null
+          id?: number
+          maximumHours?: number | null
+          minimumHours?: number | null
+          name: string
+          rateType: Database["public"]["Enums"]["RateType"]
+          supplierId: number
+          updatedAt?: string
+        }
+        Update: {
+          baseRate?: number
+          createdAt?: string
+          description?: string | null
+          id?: number
+          maximumHours?: number | null
+          minimumHours?: number | null
+          name?: string
+          rateType?: Database["public"]["Enums"]["RateType"]
+          supplierId?: number
+          updatedAt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "SupplierService_supplierId_fkey"
+            columns: ["supplierId"]
+            isOneToOne: false
+            referencedRelation: "Supplier"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Table: {
         Row: {
           createdAt: string
@@ -942,7 +1021,7 @@ export type Database = {
         Args: {
           user_id: string
           event_id: number
-          required_permission: Database["public"]["Enums"]["EventPermissions"]
+          required_permission: string
         }
         Returns: boolean
       }
@@ -1098,6 +1177,7 @@ export type Database = {
       InviteStatus: "Pending" | "Accepted" | "Expired"
       MemberStatus: "Active" | "Inactive" | "Suspended"
       OrgRole: "Owner" | "Admin" | "Member"
+      RateType: "Hourly" | "Daily" | "Fixed" | "PerPerson" | "Custom"
       RSVPStatus: "attending" | "not attending" | "pending"
       SubscriptionStatus: "Starter" | "StarterPlus" | "Pro" | "Enterprise"
       SubscriptionType:
@@ -1107,6 +1187,20 @@ export type Database = {
         | "StarterPlus"
         | "Pro"
         | "Enterprise"
+      SupplierCategory:
+        | "AV_Equipment"
+        | "Sound_System"
+        | "Lighting"
+        | "FoodCatering"
+        | "BeverageCatering"
+        | "Decoration"
+        | "Photography"
+        | "Videography"
+        | "Entertainment"
+        | "Security"
+        | "Transportation"
+        | "Other"
+      SupplierStatus: "Pending" | "Confirmed" | "Cancelled" | "Completed"
       UserRole: "Owner" | "Admin"
     }
     CompositeTypes: {
