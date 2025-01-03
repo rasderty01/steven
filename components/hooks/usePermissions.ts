@@ -44,7 +44,6 @@ export function usePermissions() {
       console.log("User error:", userError);
 
       if (userError || !user) throw userError || new Error("No user found");
-      console.log("User data:", user.id);
 
       const { data: memberData } = await supabase
         .from("OrganizationMember")
@@ -52,8 +51,6 @@ export function usePermissions() {
         .eq("userId", user.id)
         .eq("orgId", orgId as string)
         .single();
-
-      console.log("Member data:", memberData);
 
       if (!memberData) return null;
 

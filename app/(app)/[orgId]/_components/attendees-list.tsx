@@ -59,7 +59,7 @@ export function AttendeesListComponent({
       <CardHeader>
         <CardTitle className="text-xl">Attendees ({guests.length})</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-h-96 h-full overflow-y-auto">
         <Table>
           <TableHeader>
             <TableRow>

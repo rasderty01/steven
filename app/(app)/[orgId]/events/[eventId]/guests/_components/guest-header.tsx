@@ -1,10 +1,10 @@
-// app/[orgId]/events/[eventId]/guests/components/guest-header.tsx
 "use client";
 
 import { usePermissions } from "@/components/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
-import { Mail, Upload } from "lucide-react";
+import { Mail } from "lucide-react";
 import { AddGuestDialog } from "./add-guest-dialog";
+import { ImportGuestsDialog } from "./import-guests";
 
 export function GuestHeader() {
   const { hasEventPermission, isLoading: permissionsLoading } =
@@ -19,15 +19,7 @@ export function GuestHeader() {
         {canAddGuests && (
           <>
             <AddGuestDialog />
-            <Button
-              variant="outline"
-              onClick={() => {
-                /* Import modal - to be implemented */
-              }}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Import Guests
-            </Button>
+            <ImportGuestsDialog />
           </>
         )}
       </div>

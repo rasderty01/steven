@@ -28,7 +28,7 @@ export default async function Page({ params }: PageProps) {
         <EventActions eventId={eventId} orgId={orgId} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 ">
         <Suspense fallback={<div>Loading event details...</div>}>
           <EventDetailsComponent event={event} />
         </Suspense>

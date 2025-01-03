@@ -1,5 +1,3 @@
-"use client";
-
 import { ChevronDown, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,6 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { updateUserMetadata } from "@/utils/metadata";
 
 interface Team {
   id: number;
@@ -38,7 +37,14 @@ export function TeamSwitcher({
   const activeTeam =
     teams.find((team) => team.id === parseInt(currentOrgId)) ?? teams[0];
 
-  const handleTeamChange = (team: Team) => {
+  const handleTeamChange = async (team: Team) => {
+    // Update metadata before navigation
+    await updateUserMetadata({
+      currentOrgId: team.id.toString(),
+      // Reset currentEventId when changing org
+      currentEventId: undefined,
+    });
+
     router.push(`/${team.id}`);
   };
 

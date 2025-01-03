@@ -1,0 +1,6 @@
+title,firstName,lastName,email,phoneNumber,role,address,gender,occupation
+Mr.,John,Smith,john.smith@email.com,+1234567890,Family,123 Main St,Male,Engineer
+Mrs.,Sarah,Johnson,sarah.j@email.com,+0987654321,Friend,456 Oak Ave,Female,Doctor
+Dr.,Michael,Brown,m.brown@email.com,+1122334455,Colleague,789 Pine Rd,Male,Professor
+Ms.,Emily,Davis,,+5544332211,Family,321 Elm St,Female,Artist
+,David,Wilson,david.w@email.com,,Friend,,Male,

@@ -53,7 +53,7 @@ export default async function SignIn({
         <SubmitButton pendingText="Signing In..." formAction={signInAction}>
           Sign in
         </SubmitButton>
-        <FormMessage message={searchParams} />
+        <FormMessage message={await searchParams} />
       </div>
     </form>
   );
