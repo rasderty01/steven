@@ -78,7 +78,6 @@ export function NavUser({ orgId }: { orgId: string }) {
 
       // Redirect to login
       router.push("/login");
-      toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Failed to log out");

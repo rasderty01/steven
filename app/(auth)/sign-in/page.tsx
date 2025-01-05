@@ -12,6 +12,7 @@ export default async function SignIn({
 }: {
   searchParams: { message: string };
 }) {
+  const message = await searchParams;
   await isLoggedIn();
 
   return (
@@ -53,7 +54,7 @@ export default async function SignIn({
         <SubmitButton pendingText="Signing In..." formAction={signInAction}>
           Sign in
         </SubmitButton>
-        <FormMessage message={await searchParams} />
+        <FormMessage message={message} />
       </div>
     </form>
   );

@@ -1,5 +1,6 @@
 "use server";
 
+import { Database } from "@/utils/supabase/database.types";
 import { createServer } from "@/utils/supabase/server";
 import { encodedRedirect } from "@/utils/utils";
 import { headers } from "next/headers";
@@ -39,11 +40,14 @@ export const signUpAction = async (formData: FormData) => {
   }
 };
 
+type EventStatus = Database["public"]["Enums"]["EventStatus"];
+
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const supabase = await createServer();
 
+  // Attempt sign in
   const { data: authData, error: authError } =
     await supabase.auth.signInWithPassword({
       email,
@@ -54,18 +58,40 @@ export const signInAction = async (formData: FormData) => {
     return encodedRedirect("error", "/sign-in", authError.message);
   }
 
-  // Get user's organization
-  const { data: userData } = await supabase
-    .from("User")
-    .select("orgId")
-    .eq("id", authData.user.id)
-    .single();
+  // Get user's metadata including organization
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  if (!userData?.orgId) {
+  if (userError || !user) {
+    return encodedRedirect("error", "/sign-in", "Failed to fetch user data");
+  }
+
+  const currentOrgId = user.user_metadata.navigation?.currentOrgId;
+
+  if (!currentOrgId) {
     return redirect("/create-org");
   }
 
-  return redirect(`/${userData.orgId}`);
+  // Get any active draft event
+  const { data: eventData, error: eventError } = await supabase
+    .from("Event")
+    .select("id")
+    .eq("orgId", currentOrgId)
+    .eq("userId", user.id)
+    .eq("status", "Draft" satisfies EventStatus)
+    .order("createdAt", { ascending: false })
+    .limit(1)
+    .single();
+
+  // If there's an active draft event, redirect to it
+  if (eventData?.id) {
+    return redirect(`/${currentOrgId}/events/${eventData.id}`);
+  }
+
+  // Otherwise, redirect to organization dashboard
+  return redirect(`/${currentOrgId}`);
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {

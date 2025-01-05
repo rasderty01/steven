@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { Geist } from "next/font/google";
 import "./globals.css";
+import { AuthCleanupProvider } from "@/components/providers/auth-provider";
 
 const geistSans = Geist({
   display: "swap",
@@ -34,7 +35,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <AuthCleanupProvider>{children}</AuthCleanupProvider>
             <Toaster />
           </ThemeProvider>
         </ReactQueryProvider>

@@ -1,10 +1,10 @@
+// middleware.ts
 import { Database } from "@/utils/supabase/database.types";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 type OrgRole = Database["public"]["Enums"]["OrgRole"];
 
-// Define protected routes and required roles
 const PROTECTED_ROUTES = {
   owner: {
     routes: ["/settings/general"],
@@ -22,12 +22,28 @@ const PUBLIC_ROUTES = [
   "/sign-up",
   "/forgot-password",
   "/unauthorized",
+  "/create-org",
 ];
 
-export const updateSession = async (request: NextRequest) => {
-  console.log("🚀 Middleware Starting...");
-  console.log("📍 Current Path:", request.nextUrl.pathname);
+// Only get essential cookies for auth
+const getAuthCookies = (cookies: NextRequest["cookies"]) => {
+  return cookies
+    .getAll()
+    .filter((cookie) => {
+      // Only include the latest auth token and refresh token
+      const isAuthToken =
+        cookie.name.startsWith("sb-") && cookie.name.includes("-auth-token");
+      const isRefreshToken =
+        cookie.name.startsWith("sb-") && cookie.name.includes("-refresh-token");
+      return isAuthToken || isRefreshToken;
+    })
+    .map((cookie) => ({
+      name: cookie.name,
+      value: cookie.value,
+    }));
+};
 
+export const updateSession = async (request: NextRequest) => {
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -40,15 +56,32 @@ export const updateSession = async (request: NextRequest) => {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll().map((cookie) => ({
-            name: cookie.name,
-            value: cookie.value,
-          }));
+          return getAuthCookies(request.cookies);
         },
         setAll(cookies) {
           cookies.forEach((cookie) => {
-            request.cookies.set(cookie.name, cookie.value);
-            response.cookies.set(cookie.name, cookie.value, cookie.options);
+            // Clean up old cookies with the same name
+            if (cookie.name.includes("-auth-token")) {
+              const baseName = cookie.name.split(".")[0];
+              request.cookies
+                .getAll()
+                .filter((c) => c.name.startsWith(baseName))
+                .forEach((oldCookie) => {
+                  response.cookies.delete(oldCookie.name);
+                });
+            }
+
+            // Set the new cookie
+            response.cookies.set({
+              name: cookie.name,
+              value: cookie.value,
+              ...cookie.options,
+              // Set reasonable max age
+              maxAge: 60 * 60 * 24 * 7, // 1 week
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              path: "/",
+            });
           });
         },
       },
@@ -57,274 +90,78 @@ export const updateSession = async (request: NextRequest) => {
 
   const path = request.nextUrl.pathname;
   const pathSegments = path.split("/").filter(Boolean);
-  console.log("📂 Path Segments:", pathSegments);
 
   // Check if it's a public route
   const isPublicRoute = PUBLIC_ROUTES.includes(path) || path.startsWith("/e/");
-  console.log("🔓 Is Public Route:", isPublicRoute);
+  if (isPublicRoute) return response;
 
-  if (isPublicRoute) {
-    console.log("↩️ Returning for public route");
-    return response;
-  }
-
-  // Get authenticated user with validated metadata
+  // Get authenticated user
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.log("❌ No authenticated user found or error:", userError);
     return NextResponse.redirect(new URL("/sign-in", request.url));
-  }
-
-  console.log("👤 User authenticated:", user.id);
-  console.log(
-    "🔐 Current user metadata:",
-    JSON.stringify(user.user_metadata, null, 2)
-  );
-
-  // Handle empty path or root path
-  if (pathSegments.length === 0 || path === "/") {
-    console.log("🏠 Handling root path...");
-
-    // First try to get the current org from metadata
-    const currentOrgId = user.user_metadata?.navigation?.currentOrgId;
-    const currentEventId = user.user_metadata?.navigation?.currentEventId;
-
-    console.log(
-      "📌 From metadata - currentOrgId:",
-      currentOrgId,
-      "currentEventId:",
-      currentEventId
-    );
-
-    if (currentOrgId) {
-      console.log("✅ Found currentOrgId in metadata");
-      // If we have both org and event IDs, redirect to the event page
-      if (currentEventId) {
-        console.log(
-          "➡️ Redirecting to event page:",
-          `/${currentOrgId}/events/${currentEventId}`
-        );
-        return NextResponse.redirect(
-          new URL(`/${currentOrgId}/events/${currentEventId}`, request.url)
-        );
-      }
-      // Otherwise, redirect to the org dashboard
-      console.log("➡️ Redirecting to org dashboard:", `/${currentOrgId}`);
-      return NextResponse.redirect(new URL(`/${currentOrgId}`, request.url));
-    }
-
-    console.log("🔍 No currentOrgId in metadata, checking database...");
-    // If no currentOrgId in metadata, try to get user's organization
-    const { data: userData, error: userError } = await supabase
-      .from("User")
-      .select("orgId")
-      .eq("id", user.id)
-      .single();
-
-    console.log("📊 Database user data:", userData);
-    if (userError) console.log("❌ Database error:", userError);
-
-    if (userData?.orgId) {
-      console.log("✅ Found orgId in database:", userData.orgId);
-      // Update the navigation metadata
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          navigation: {
-            currentOrgId: userData.orgId.toString(),
-            currentEventId: undefined,
-          },
-        },
-      });
-
-      if (updateError) {
-        console.log("❌ Error updating metadata:", updateError);
-      } else {
-        console.log("✅ Updated metadata successfully");
-      }
-
-      console.log("➡️ Redirecting to org dashboard:", `/${userData.orgId}`);
-      return NextResponse.redirect(new URL(`/${userData.orgId}`, request.url));
-    }
-
-    console.log("➡️ No organization found, redirecting to create-org");
-    return NextResponse.redirect(new URL("/create-org", request.url));
   }
 
   // Check if this is an organization-scoped route
   if (pathSegments.length >= 1) {
     const orgId = pathSegments[0];
-    console.log("🏢 Checking organization route:", orgId);
+    if (isNaN(Number(orgId))) return response;
 
-    // If first segment is not a number, it's not an org route
-    if (isNaN(Number(orgId))) {
-      console.log("❌ Not a valid org route (not a number)");
-      return response;
-    }
-
-    // Validate that the organization exists
-    const { data: orgExists, error: orgError } = await supabase
-      .from("Organization")
-      .select("id")
-      .eq("id", orgId)
-      .single();
-
-    if (orgError || !orgExists) {
-      console.log("❌ Organization does not exist:", orgId);
-      // Redirect to their current org if they have one
-      if (user.user_metadata?.navigation?.currentOrgId) {
-        console.log(
-          "↩️ Redirecting to current org:",
-          user.user_metadata.navigation.currentOrgId
-        );
-        return NextResponse.redirect(
-          new URL(`/${user.user_metadata.navigation.currentOrgId}`, request.url)
-        );
-      }
-      return NextResponse.redirect(new URL("/create-org", request.url));
-    }
-
-    // Get user's membership in the organization
-    const { data: memberData, error: memberError } = await supabase
+    // Use single query to validate org and membership
+    const { data: orgMember, error: orgError } = await supabase
       .from("OrganizationMember")
-      .select("role")
-      .match({ userId: user.id, orgId })
+      .select(
+        `
+        role,
+        organization:Organization (id)
+      `
+      )
+      .eq("userId", user.id)
+      .eq("orgId", orgId)
       .single();
 
-    // Get a fresh user object with validated metadata
-    const {
-      data: { user: validatedUser },
-      error: refreshError,
-    } = await supabase.auth.getUser();
+    if (orgError || !orgMember?.organization) {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
 
-    console.log("🔄 Checking if org switch needed...");
-    // If user has access to this org but it's different from their current org, update metadata
-    if (
-      memberData &&
-      orgId !== validatedUser?.user_metadata?.navigation?.currentOrgId
-    ) {
-      console.log(
-        "🔄 Updating currentOrgId in metadata from",
-        validatedUser?.user_metadata?.navigation?.currentOrgId,
-        "to",
-        orgId
-      );
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          navigation: {
-            currentOrgId: orgId,
-            // Clear eventId when switching orgs
-            currentEventId: undefined,
-          },
-        },
-      });
-      if (updateError) {
-        console.log("❌ Error updating org metadata:", updateError);
-      } else {
-        console.log("✅ Successfully updated org metadata");
+    const role = orgMember.role as OrgRole;
 
-        // Verify the update by getting fresh user data
-        const {
-          data: { user: updatedUser },
-        } = await supabase.auth.getUser();
-        console.log(
-          "✅ Verified new metadata:",
-          JSON.stringify(updatedUser?.user_metadata, null, 2)
-        );
+    // Handle event routes more efficiently
+    if (pathSegments[1] === "events" && pathSegments[2]) {
+      const eventId = pathSegments[2];
+      const { count } = await supabase
+        .from("Event")
+        .select("id", { count: "exact", head: true })
+        .eq("id", eventId)
+        .eq("orgId", orgId);
 
-        // Force a redirect to the new org to ensure the session is refreshed
-        console.log("🔄 Forcing redirect to refresh session for org:", orgId);
+      if (!count) {
         return NextResponse.redirect(new URL(`/${orgId}`, request.url));
       }
     }
 
-    console.log("👥 Member data:", memberData);
-    if (memberError) console.log("❌ Member lookup error:", memberError);
-
-    // If user is not a member of this organization
-    if (!memberData) {
-      console.log("❌ User is not a member of this organization");
-      // Get user's organization
-      const { data: userData } = await supabase
-        .from("User")
-        .select("orgId")
-        .eq("id", user.id)
-        .single();
-
-      console.log("🔄 Falling back to user data:", userData);
-
-      // Update user metadata to clear the current org if they're not a member
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          navigation: {
-            currentOrgId: userData?.orgId?.toString(),
-            currentEventId: undefined,
-          },
-        },
-      });
-
-      if (updateError) {
-        console.log("❌ Error updating metadata:", updateError);
-      }
-
-      return userData?.orgId
-        ? NextResponse.redirect(new URL(`/${userData.orgId}`, request.url))
-        : NextResponse.redirect(new URL("/create-org", request.url));
-    }
-
-    const role = memberData.role as OrgRole;
     const remainingPath = `/${pathSegments.slice(1).join("/")}`;
-    console.log("🛣️ Remaining path:", remainingPath);
-    console.log("👑 User role:", role);
 
-    // Handle event routes and update metadata
-    if (pathSegments[1] === "events" && pathSegments[2]) {
-      const eventId = pathSegments[2];
-      console.log("🎯 Updating event metadata:", eventId);
-
-      // Update the currentEventId in metadata
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          navigation: {
-            currentEventId: eventId,
-            currentOrgId: orgId,
-          },
-        },
-      });
-
-      if (updateError) {
-        console.log("❌ Error updating event metadata:", updateError);
-      } else {
-        console.log("✅ Updated event metadata successfully");
-      }
-    }
-
-    // Check owner routes
+    // Check route permissions
     const isOwnerRoute = PROTECTED_ROUTES.owner.routes.some((route) =>
       remainingPath.startsWith(route)
     );
-    if (isOwnerRoute && !PROTECTED_ROUTES.owner.allowedRoles.includes(role)) {
-      console.log("🚫 Unauthorized access to owner route");
-      return NextResponse.redirect(
-        new URL(`/unauthorized?orgId=${orgId}`, request.url)
-      );
-    }
-
-    // Check admin routes
     const isAdminRoute = PROTECTED_ROUTES.admin.routes.some((route) =>
       remainingPath.startsWith(route)
     );
-    if (isAdminRoute && !PROTECTED_ROUTES.admin.allowedRoles.includes(role)) {
-      console.log("🚫 Unauthorized access to admin route");
+
+    if (
+      (isOwnerRoute && !PROTECTED_ROUTES.owner.allowedRoles.includes(role)) ||
+      (isAdminRoute && !PROTECTED_ROUTES.admin.allowedRoles.includes(role))
+    ) {
       return NextResponse.redirect(
         new URL(`/unauthorized?orgId=${orgId}`, request.url)
       );
     }
   }
 
-  console.log("✅ Middleware completed successfully");
   return response;
 };

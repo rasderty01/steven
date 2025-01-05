@@ -1,4 +1,3 @@
-// app/[orgId]/events/[eventId]/guests/components/guest-table.tsx
 "use client";
 
 import { usePermissions } from "@/components/hooks/usePermissions";
@@ -33,10 +32,10 @@ import { createClient } from "@/utils/supabase/client";
 import { type Database } from "@/utils/supabase/database.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import { EditGuestDialog } from "./edit-guest-dialog";
+import { EditGuestDialog } from "../edit-guest-dialog";
 
 const supabase = createClient();
 
@@ -52,21 +51,43 @@ interface GuestTableProps {
   guests?: Guest[];
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export default function GuestTable({ guests = [] }: GuestTableProps) {
   const params = useParams();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
   const { hasEventPermission, isLoading: permissionsLoading } =
     usePermissions();
-
   const canManageGuests = hasEventPermission("MANAGE_GUESTS");
+
+  // Get current page from URL or default to 1
+  const currentPage = Number(searchParams.get("page")) || 1;
+
+  // Filter guests based on search query
+  const filteredGuests = useMemo(() => {
+    return guests.filter((guest) => {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        guest.firstName?.toLowerCase().includes(searchLower) ||
+        guest.lastName.toLowerCase().includes(searchLower) ||
+        guest.email?.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [guests, searchQuery]);
+
+  // Calculate pagination
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentGuests = filteredGuests.slice(startIndex, endIndex);
 
   const { mutate: deleteGuest, isPending: isDeleting } = useMutation({
     mutationFn: async (guestId: number) => {
-      // Soft delete guest
       const { error: guestError } = await supabase
         .from("Guest")
         .update({
@@ -78,7 +99,6 @@ export default function GuestTable({ guests = [] }: GuestTableProps) {
 
       if (guestError) throw guestError;
 
-      // Soft delete associated RSVP
       const { error: rsvpError } = await supabase
         .from("RSVP")
         .update({
@@ -100,15 +120,6 @@ export default function GuestTable({ guests = [] }: GuestTableProps) {
       toast.error("Failed to delete guest");
       console.error("Error deleting guest:", error);
     },
-  });
-
-  const filteredGuests = guests.filter((guest) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      guest.firstName?.toLowerCase().includes(searchLower) ||
-      guest.lastName.toLowerCase().includes(searchLower) ||
-      guest.email?.toLowerCase().includes(searchLower)
-    );
   });
 
   const getRSVPBadgeColor = (status: string | null) => {
@@ -156,7 +167,7 @@ export default function GuestTable({ guests = [] }: GuestTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredGuests.length === 0 ? (
+              {currentGuests.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={canManageGuests ? 7 : 6}
@@ -166,7 +177,7 @@ export default function GuestTable({ guests = [] }: GuestTableProps) {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredGuests.map((guest) => (
+                currentGuests.map((guest) => (
                   <TableRow key={guest.id}>
                     <TableCell>
                       {guest.title ? `${guest.title} ` : ""}
@@ -236,40 +247,6 @@ export default function GuestTable({ guests = [] }: GuestTableProps) {
           }}
         />
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove {selectedGuest?.firstName}{" "}
-              {selectedGuest?.lastName} from the guest list. This action cannot
-              be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setIsDeleteDialogOpen(false);
-                setSelectedGuest(null);
-              }}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => selectedGuest && deleteGuest(selectedGuest.id)}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
