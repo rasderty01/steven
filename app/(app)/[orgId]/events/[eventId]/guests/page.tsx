@@ -4,7 +4,7 @@ import { checkRole } from "@/utils/auth";
 import { type Database } from "@/utils/supabase/database.types";
 import { createServer } from "@/utils/supabase/server";
 import { GuestHeader } from "./_components/guest-header";
-import GuestTable from "./_components/guests/guest-table";
+
 import { DataTable } from "./_components/guests/data-table";
 import { columns } from "./_components/guests/columns";
 import { getGuests } from "./actions";
@@ -24,9 +24,11 @@ export default async function GuestsPage({ params }: GuestsPageProps) {
   await checkRole(orgId, ["Admin", "Owner", "Member"]);
 
   return (
-    <>
-      <GuestHeader />
-      <DataTable columns={columns} data={guests} />
-    </>
+    <section className="flex items-center justify-center">
+      <div className="w-full">
+        <GuestHeader />
+        <DataTable columns={columns} data={guests} />
+      </div>
+    </section>
   );
 }

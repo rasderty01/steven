@@ -43,10 +43,10 @@ export const columns: ColumnDef<GuestWithRSVP>[] = [
         <Badge
           variant={
             value === "attending"
-              ? "default"
+              ? "attending"
               : value === "not attending"
-                ? "destructive"
-                : "secondary"
+                ? "not attending"
+                : "pending"
           }
         >
           {value === "attending"

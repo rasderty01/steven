@@ -55,7 +55,6 @@ export function DataTableToolbar<TData>({
 }: DataTableToolbarProps<TData>) {
   const queryClient = useQueryClient();
   const isFiltered = table.getState().columnFilters.length > 0;
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get all selected rows
   const selectedRows = table.getSelectedRowModel().rows;
@@ -120,44 +119,45 @@ export function DataTableToolbar<TData>({
     },
   });
 
-  const { mutate: deleteBulkGuests } = useMutation({
-    mutationFn: async () => {
-      const promises = selectedGuests.map((guest) =>
-        deleteGuest({
-          guestId: guest.id,
-          eventId: guest.eventId,
-        })
-      );
-      await Promise.all(promises);
-    },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["guests"] });
-
-      const previousGuests = queryClient.getQueryData<any[]>(["guests"]);
-
-      // Optimistically remove the deleted guests
-      queryClient.setQueryData<any[]>(["guests"], (old = []) => {
-        return old.filter(
-          (guest) =>
-            !selectedGuests.some((selected) => selected.id === guest.id)
+  const { mutate: deleteBulkGuests, isPending: pendingDeleteBulkGuests } =
+    useMutation({
+      mutationFn: async () => {
+        const promises = selectedGuests.map((guest) =>
+          deleteGuest({
+            guestId: guest.id,
+            eventId: guest.eventId,
+          })
         );
-      });
+        await Promise.all(promises);
+      },
+      onMutate: async () => {
+        await queryClient.cancelQueries({ queryKey: ["guests"] });
 
-      return { previousGuests };
-    },
-    onSuccess: () => {
-      toast.success("Successfully deleted selected guests");
-      table.toggleAllRowsSelected(false);
-    },
-    onError: (error, _, context) => {
-      queryClient.setQueryData(["guests"], context?.previousGuests);
-      toast.error("Failed to delete guests");
-      console.error("Error deleting guests:", error);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["guests"] });
-    },
-  });
+        const previousGuests = queryClient.getQueryData<any[]>(["guests"]);
+
+        // Optimistically remove the deleted guests
+        queryClient.setQueryData<any[]>(["guests"], (old = []) => {
+          return old.filter(
+            (guest) =>
+              !selectedGuests.some((selected) => selected.id === guest.id)
+          );
+        });
+
+        return { previousGuests };
+      },
+      onSuccess: () => {
+        toast.success("Successfully deleted selected guests");
+        table.toggleAllRowsSelected(false);
+      },
+      onError: (error, _, context) => {
+        queryClient.setQueryData(["guests"], context?.previousGuests);
+        toast.error("Failed to delete guests");
+        console.error("Error deleting guests:", error);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: ["guests"] });
+      },
+    });
 
   return (
     <div className="flex items-center justify-between">
@@ -170,6 +170,7 @@ export function DataTableToolbar<TData>({
               </p>
               <Select
                 onValueChange={(value: RSVPStatus) => updateBulkRSVP(value)}
+                disabled={pendingDeleteBulkGuests}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Update RSVP Status" />
@@ -193,7 +194,7 @@ export function DataTableToolbar<TData>({
                 size="sm"
                 className="text-red-600 hover:bg-red-50"
                 onClick={() => deleteBulkGuests()}
-                disabled={isDeleting}
+                disabled={pendingDeleteBulkGuests}
               >
                 <TrashIcon className="mr-2 h-4 w-4" />
                 Delete

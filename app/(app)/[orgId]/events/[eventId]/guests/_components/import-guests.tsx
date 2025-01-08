@@ -53,7 +53,7 @@ export function ImportGuestsDialog() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["guests", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["guests"] });
       queryClient.invalidateQueries({ queryKey: ["importHistory", eventId] });
       toast.success("Guests imported successfully");
       resetImport();

@@ -53,6 +53,7 @@ export type Database = {
           name: string
           orgId: number | null
           subject: string
+          type: Database["public"]["Enums"]["EmailTemplateType"]
           updatedAt: string
         }
         Insert: {
@@ -63,6 +64,7 @@ export type Database = {
           name: string
           orgId?: number | null
           subject: string
+          type?: Database["public"]["Enums"]["EmailTemplateType"]
           updatedAt?: string
         }
         Update: {
@@ -73,6 +75,7 @@ export type Database = {
           name?: string
           orgId?: number | null
           subject?: string
+          type?: Database["public"]["Enums"]["EmailTemplateType"]
           updatedAt?: string
         }
         Relationships: [
@@ -1164,6 +1167,7 @@ export type Database = {
         | "Venue"
         | "GuestSpeakers"
         | "Miscellaneous"
+      EmailTemplateType: "general" | "wedding" | "birthday"
       EventPermissions:
         | "VIEW"
         | "EDIT"

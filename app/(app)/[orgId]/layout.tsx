@@ -18,7 +18,7 @@ export default async function DashboardLayout({
       <SidebarInset>
         <div className="flex flex-col h-screen">
           <AppHeader orgId={orgId} />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 ">
             <div className="container py-6">{children}</div>
           </main>
         </div>

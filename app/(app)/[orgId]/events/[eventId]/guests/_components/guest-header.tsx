@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { AddGuestDialog } from "./add-guest-dialog";
 import { ImportGuestsDialog } from "./import-guests";
+import { SendInvitationsDialog } from "./send-invitation-dialog";
+import { TestEmailPreview } from "@/components/emails/test-emailcomponent";
 
 export function GuestHeader() {
   const { hasEventPermission, isLoading: permissionsLoading } =
@@ -24,17 +26,7 @@ export function GuestHeader() {
         )}
       </div>
 
-      {canSendInvites && (
-        <Button
-          variant="secondary"
-          onClick={() => {
-            /* Send invites modal - to be implemented */
-          }}
-        >
-          <Mail className="w-4 h-4 mr-2" />
-          Send Invitations
-        </Button>
-      )}
+      {canSendInvites && <SendInvitationsDialog />}
     </div>
   );
 }

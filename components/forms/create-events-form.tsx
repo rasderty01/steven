@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createEvent } from "@/lib/actions/events";
 import { CreateEventFormData, createEventSchema } from "@/types/events";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -34,11 +34,14 @@ export function CreateEventForm({ orgId }: CreateEventFormProps) {
     },
   });
 
+  const query = useQueryClient();
+
   const mutation = useMutation({
     mutationFn: (data: CreateEventFormData) => createEvent({ ...data, orgId }),
     onSuccess: (result) => {
       if (!result.success) throw new Error(result.error);
       toast.success("Event created successfully!");
+      query.invalidateQueries({ queryKey: ["events", orgId] });
       router.push(`/${orgId}/events/${result.data?.id}`);
     },
     onError: (error) => {

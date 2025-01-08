@@ -1,6 +1,7 @@
 "use server";
 import { CreateEventFormData } from "@/types/events";
 import { createServer } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function createEvent(
   data: CreateEventFormData & { orgId: string }
@@ -28,10 +29,12 @@ export async function createEvent(
         userId: user.id,
         status: "Draft",
       })
-      .select("id")
+      .select("id, orgId")
       .single();
 
     if (error) throw error;
+
+    revalidatePath(`${event.orgId}/events/${event.id}`, "layout");
 
     return { success: true, data: { id: event.id } };
   } catch (error) {
