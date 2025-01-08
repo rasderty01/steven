@@ -10,8 +10,6 @@ export default function UnauthorizedPage() {
   const searchParams = useSearchParams();
   const orgId = searchParams.get("orgId");
 
-  console.log(orgId);
-
   return (
     <div className="container flex flex-col items-center justify-center min-h-[80vh] space-y-8 text-center">
       <Alert variant="destructive" className="max-w-xl">

@@ -1,4 +1,7 @@
-import { ChevronDown, Plus } from "lucide-react";
+"use client";
+
+import { ChevronDown, Command, Plus } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -22,9 +25,26 @@ import { updateUserMetadata } from "@/utils/metadata";
 interface Team {
   id: number;
   name: string;
-  logo: React.ElementType;
+  logo_url: string | null;
   plan: string;
 }
+
+const TeamLogo = ({ team }: { team: Team }) => {
+  if (team.logo_url) {
+    return (
+      <Image
+        src={team.logo_url}
+        alt={`${team.name} logo`}
+        width={16}
+        height={16}
+        className="size-4 rounded-sm object-contain"
+      />
+    );
+  }
+
+  // Fallback to Command icon if no logo_url
+  return <Command className="size-4" />;
+};
 
 export function TeamSwitcher({
   teams,
@@ -38,10 +58,8 @@ export function TeamSwitcher({
     teams.find((team) => team.id === parseInt(currentOrgId)) ?? teams[0];
 
   const handleTeamChange = async (team: Team) => {
-    // Update metadata before navigation
     await updateUserMetadata({
       currentOrgId: team.id.toString(),
-      // Reset currentEventId when changing org
       currentEventId: undefined,
     });
 
@@ -55,7 +73,7 @@ export function TeamSwitcher({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton className="w-fit px-1.5">
               <div className="flex aspect-square size-5 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                <activeTeam.logo className="size-3" />
+                <TeamLogo team={activeTeam} />
               </div>
               <span className="truncate font-semibold">{activeTeam.name}</span>
               <ChevronDown className="opacity-50" />
@@ -77,7 +95,7 @@ export function TeamSwitcher({
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
-                  <team.logo className="size-4 shrink-0" />
+                  <TeamLogo team={team} />
                 </div>
                 <span className="flex-1">{team.name}</span>
                 <span className="text-xs text-muted-foreground">

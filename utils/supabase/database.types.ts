@@ -543,6 +543,7 @@ export type Database = {
           eventId: number | null
           guest_limit_per_event: number
           id: number
+          logo_url: string | null
           member_limit: number
           name: string
           updatedAt: string
@@ -554,6 +555,7 @@ export type Database = {
           eventId?: number | null
           guest_limit_per_event?: number
           id?: number
+          logo_url?: string | null
           member_limit?: number
           name: string
           updatedAt?: string
@@ -565,6 +567,7 @@ export type Database = {
           eventId?: number | null
           guest_limit_per_event?: number
           id?: number
+          logo_url?: string | null
           member_limit?: number
           name?: string
           updatedAt?: string
@@ -1041,6 +1044,7 @@ export type Database = {
           eventId: number | null
           guest_limit_per_event: number
           id: number
+          logo_url: string | null
           member_limit: number
           name: string
           updatedAt: string

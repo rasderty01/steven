@@ -17,7 +17,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
   Bell,
@@ -28,45 +28,17 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useUserProfile } from "./queries";
 
-interface User {
-  orgId: string;
-}
+const supabase = createClient();
 
 export function NavUser({ orgId }: { orgId: string }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
-  const supabase = createClient();
   const queryClient = useQueryClient();
 
-  // Fetch user data
-  const { data: userData, isLoading } = useQuery({
-    queryKey: ["user"],
-    queryFn: async () => {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-      if (authError) throw authError;
-
-      if (!user) throw new Error("No user found");
-
-      const { data: profile, error: profileError } = await supabase
-        .from("User")
-        .select("name, email, subscriptionStatus")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      return {
-        name: profile.name || user.email?.split("@")[0] || "User",
-        email: user.email || "",
-        subscriptionStatus: profile.subscriptionStatus,
-        avatar: user.user_metadata.avatar_url,
-      };
-    },
-  });
+  // Use centralized query
+  const { data: userData, isLoading } = useUserProfile();
 
   const handleLogout = async () => {
     try {
@@ -89,7 +61,7 @@ export function NavUser({ orgId }: { orgId: string }) {
   };
 
   if (isLoading) {
-    return null; // Or show a loading skeleton
+    return null;
   }
 
   const showUpgradeButton = userData?.subscriptionStatus === "Starter";

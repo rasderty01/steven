@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
+import { useSubscriptionPlan } from "./queries";
 
 const subscriptionPlans = [
   {
@@ -59,24 +60,7 @@ const subscriptionPlans = [
 export function BillingTab({ orgId }: { orgId: string }) {
   const supabase = createClient();
 
-  const { data: subscription } = useQuery({
-    queryKey: ["subscription", orgId],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
-      const { data, error } = await supabase
-        .from("User")
-        .select("subscriptionStatus, subscription_type")
-        .eq("id", user.id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: subscription } = useSubscriptionPlan(orgId);
 
   const handleUpgrade = (plan: string) => {
     toast.info(`Upgrading to ${plan}. Implement payment flow here.`);
