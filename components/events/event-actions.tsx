@@ -38,20 +38,7 @@ export function EventActions({ eventId, orgId }: EventActionsProps) {
 
   const deleteEventMutation = useMutation({
     mutationFn: async () => {
-      await deleteEvent(eventId);
-    },
-    onSuccess: () => {
-      toast.success("Event deleted successfully");
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      queryClient.invalidateQueries({ queryKey: ["event", eventId] });
-      router.refresh();
-      router.push(`/${orgId}/events`);
-      setIsDeleteOpen(false);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete event");
-      console.error("Error deleting event:", error);
+      await deleteEvent(eventId, orgId);
     },
   });
 

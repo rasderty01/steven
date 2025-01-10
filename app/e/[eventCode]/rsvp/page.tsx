@@ -25,9 +25,10 @@ export default async function EventPage({ params }: PageProps) {
   );
 }
 
-export function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps) {
+  const { eventCode } = await params;
   return {
-    title: `Event ${params.eventCode}`,
-    description: `Details for event ${params.eventCode}`,
+    title: `Event ${eventCode}`,
+    description: `Details for event ${eventCode}`,
   };
 }

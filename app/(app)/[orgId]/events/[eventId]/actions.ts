@@ -3,6 +3,7 @@
 import { Database } from "@/utils/supabase/database.types";
 import { createServer } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 // Base types from database
 type EventRow = Database["public"]["Tables"]["Event"]["Row"];
@@ -138,11 +139,14 @@ export async function updateEventDetails(
   }
 }
 
-export async function deleteEvent(eventId: string): Promise<void> {
+export async function deleteEvent(
+  eventId: string,
+  orgId: string
+): Promise<void> {
   const supabase = await createServer();
 
   try {
-    const { error } = await supabase.rpc("soft_delete_event", {
+    const { data, error } = await supabase.rpc("soft_delete_event", {
       event_id: parseInt(eventId),
     });
 
@@ -150,11 +154,13 @@ export async function deleteEvent(eventId: string): Promise<void> {
       throw new Error(`Error deleting event: ${error.message}`);
     }
 
-    revalidatePath(`/[orgId]/events`);
+    revalidatePath(`/[orgId]/events/[eventId]`, "page");
   } catch (error) {
     console.error("Error:", error);
     throw error;
   }
+
+  redirect(`/${orgId}/events`);
 }
 
 export async function checkEventAccess(

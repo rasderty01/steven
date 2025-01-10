@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSidebar } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -56,6 +57,7 @@ export function AddGuestDialog({ onSuccess }: AddGuestDialogProps) {
   const [open, setOpen] = useState(false);
   const params = useParams();
   const queryClient = useQueryClient();
+  const { isMobile } = useSidebar();
 
   const form = useForm<AddGuestSchema>({
     resolver: zodResolver(addGuestSchema),
@@ -120,9 +122,13 @@ export function AddGuestDialog({ onSuccess }: AddGuestDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="w-4 h-4 mr-2" />
-          Add Guest
+        <Button
+          size={isMobile ? "sm" : "default"}
+          variant="outline"
+          className="flex items-center justify-center gap-2"
+        >
+          <PlusCircle className="size-4" />
+          Add New Guest
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

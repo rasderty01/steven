@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import DataPreviewTable from "./data-preview-table";
 import FileDropZone from "./file-drop-zone";
+import { useSidebar } from "@/components/ui/sidebar";
+import { is } from "date-fns/locale";
 
 export function ImportGuestsDialog() {
   const params = useParams();
@@ -30,6 +32,7 @@ export function ImportGuestsDialog() {
   const [totalRows, setTotalRows] = useState(0);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { isMobile } = useSidebar();
 
   const importMutation = useMutation({
     mutationFn: async (data: any[]) => {
@@ -169,9 +172,13 @@ export function ImportGuestsDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Upload className="w-4 h-4 mr-2" />
-          Import Guests
+        <Button
+          size={isMobile ? "sm" : "default"}
+          variant="outline"
+          className="flex items-center justify-center gap-2"
+        >
+          <Upload className="size-4" />
+          Import
         </Button>
       </DialogTrigger>
       <DialogContent className="w-full">

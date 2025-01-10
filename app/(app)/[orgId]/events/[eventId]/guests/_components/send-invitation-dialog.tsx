@@ -30,21 +30,14 @@ import { GuestSelect } from "@/components/sendinvitationdialog/guest-select";
 import { PreviewSection } from "@/components/sendinvitationdialog/preview-section";
 import { ConfirmSection } from "@/components/sendinvitationdialog/confirm-section";
 import { Form } from "@/components/ui/form";
+import { useSidebar } from "@/components/ui/sidebar";
+import {
+  SendInvitationsForm,
+  sendInvitationsSchema,
+  TemplateType,
+} from "@/components/sendinvitationdialog/types";
 
 const supabase = createClient();
-
-// Define template types based on what we support
-const templateTypes = ["general", "wedding", "birthday"] as const;
-type TemplateType = (typeof templateTypes)[number];
-
-const sendInvitationsSchema = z.object({
-  templateId: z.number(),
-  templateType: z.enum(templateTypes),
-  message: z.string().optional(),
-  selectedGuests: z.array(z.number()),
-});
-
-type SendInvitationsForm = z.infer<typeof sendInvitationsSchema>;
 
 export interface Guest {
   id: number;
@@ -62,6 +55,7 @@ export function SendInvitationsDialog() {
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const { orgId, eventId } = useParams();
+  const { isMobile } = useSidebar();
 
   const form = useForm<SendInvitationsForm>({
     resolver: zodResolver(sendInvitationsSchema),
@@ -69,6 +63,7 @@ export function SendInvitationsDialog() {
       selectedGuests: [],
       message: "",
       templateType: "general",
+      consent: false,
     },
   });
 
@@ -237,7 +232,17 @@ export function SendInvitationsDialog() {
     },
   });
 
-  const onSubmit = (data: SendInvitationsForm) => {
+  const onSubmit = async (data: SendInvitationsForm) => {
+    // Only validate consent when actually submitting
+    const isConsentValid = await form.trigger("consent");
+    if (!isConsentValid) {
+      const consentError = form.formState.errors.consent?.message;
+      if (consentError) {
+        toast.error(consentError);
+      }
+      return;
+    }
+
     if (data.selectedGuests.length === 0) {
       toast.error("Please select at least one guest");
       return;
@@ -246,13 +251,25 @@ export function SendInvitationsDialog() {
   };
 
   const handleNext = async () => {
-    const isValid = await form.trigger();
-    if (!isValid) return;
+    let isValid = false;
 
     if (step === "select") {
+      isValid = await form.trigger(["templateId", "selectedGuests"]);
+      if (!isValid) {
+        const errors = Object.entries(form.formState.errors);
+        if (errors.length > 0) {
+          toast.error(
+            `Please check: ${errors.map(([field, error]) => error.message).join(", ")}`
+          );
+        }
+        return;
+      }
       setStep("preview");
       generatePreview();
-    } else if (step === "preview") setStep("confirm");
+    } else if (step === "preview") {
+      // Preview step doesn't need validation since message is optional
+      setStep("confirm");
+    }
   };
 
   const handleBack = () => {
@@ -273,7 +290,7 @@ export function SendInvitationsDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="secondary">
+        <Button size={isMobile ? "sm" : "default"} variant="default">
           <Mail className="w-4 h-4 mr-2" />
           Send Invitations
         </Button>
@@ -322,6 +339,7 @@ export function SendInvitationsDialog() {
                 selectedTemplate={selectedTemplate}
                 selectedGuests={selectedGuests}
                 message={form.watch("message")}
+                form={form}
               />
             )}
 
@@ -349,11 +367,12 @@ export function SendInvitationsDialog() {
                 >
                   Cancel
                 </Button>
-                {step === "confirm" ? (
+                {step === "confirm" && (
                   <Button type="submit" disabled={isPending}>
                     {isPending ? "Sending..." : "Send Invitations"}
                   </Button>
-                ) : (
+                )}
+                {step !== "confirm" && (
                   <Button type="button" onClick={handleNext}>
                     Next
                     <ChevronRight className="w-4 h-4 ml-2" />

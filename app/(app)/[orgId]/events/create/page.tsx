@@ -1,4 +1,6 @@
 import { CreateEventForm } from "@/components/forms/create-events-form";
+import PageLoader from "@/components/loader";
+import { CreateEventFormSkeleton } from "@/components/skeletons/create-event-skeleton";
 import { checkRole } from "@/utils/auth";
 import { Suspense } from "react";
 
@@ -23,7 +25,7 @@ export default async function Page({ params }: PageProps) {
         </div>
 
         <div className="grid gap-4">
-          <Suspense fallback={<div>Loading form...</div>}>
+          <Suspense fallback={<CreateEventFormSkeleton />}>
             <div className="rounded-lg p-4">
               <CreateEventForm orgId={orgId} />
             </div>
