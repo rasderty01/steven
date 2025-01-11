@@ -2,15 +2,13 @@
 "use server";
 
 import {
-  SupplierCategory,
   SupplierFormValues,
   supplierSchema,
-} from "@/lib/schemas/supplier";
+} from "@/lib/schemas/supplier.schema";
+import { SupplierCategory, SupplierInsert } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import { createServer } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-
-type SupplierInsert = Database["public"]["Tables"]["Supplier"]["Insert"];
 
 export async function createSupplier(formData: SupplierFormValues) {
   try {

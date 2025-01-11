@@ -22,53 +22,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { SupplierWithServices } from "@/lib/schemas/supplier";
+import {
+  ServiceSelectionFormData,
+  supplierServiceSchema,
+} from "@/lib/schemas/supplier-service.schema";
+
 import { cn } from "@/lib/utils";
+import { SupplierWithServices } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-// Form data type
-export type ServiceSelectionFormData = {
-  supplierId: number;
-  supplierServiceId: number;
-  startTime: string;
-  endTime: string;
-  agreedRate: number;
-  notes?: string;
-};
-
-// Props type
 export type ServiceSelectionFormProps = {
   supplier: SupplierWithServices;
   onSubmit: (data: ServiceSelectionFormData) => void;
 };
-
-// Form validation schema
-const formSchema = z.object({
-  supplierServiceId: z.number({
-    required_error: "Please select a service",
-  }),
-  startTime: z
-    .string({
-      required_error: "Please select a start time",
-    })
-    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
-  endTime: z
-    .string({
-      required_error: "Please select an end time",
-    })
-    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
-  agreedRate: z
-    .number({
-      required_error: "Please enter the agreed rate",
-    })
-    .min(0, "Rate must be a positive number"),
-  notes: z.string().optional(),
-});
 
 export function ServiceSelectionForm({
   supplier,
@@ -78,13 +49,14 @@ export function ServiceSelectionForm({
     new Date()
   );
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof supplierServiceSchema>>({
+    resolver: zodResolver(supplierServiceSchema),
     defaultValues: {
       supplierServiceId: supplier.SupplierService[0]?.id,
       startTime: "",
       endTime: "",
       agreedRate: 0,
+      quantity: 1,
       notes: "",
     },
   });
@@ -95,11 +67,12 @@ export function ServiceSelectionForm({
       (s) => s.id === parseInt(serviceId)
     );
     if (service) {
+      const quantity = form.getValues("quantity") || 1;
       form.setValue("agreedRate", service.baseRate);
     }
   };
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: z.infer<typeof supplierServiceSchema>) => {
     if (!selectedDate) return;
 
     // Combine date with time inputs to create proper timestamps
@@ -118,8 +91,15 @@ export function ServiceSelectionForm({
       endTime: endDateTime.toISOString(),
       agreedRate: values.agreedRate,
       notes: values.notes,
+      quantity: values.quantity,
     });
   };
+
+  const calculatedTotal = useMemo(() => {
+    const quantity = form.watch("quantity") || 0;
+    const agreedRate = form.watch("agreedRate") || 0;
+    return quantity * agreedRate;
+  }, [form.watch("quantity"), form.watch("agreedRate")]);
 
   return (
     <Form {...form}>
@@ -154,7 +134,6 @@ export function ServiceSelectionForm({
             </FormItem>
           )}
         />
-
         {/* Date Selection */}
         <FormField
           control={form.control}
@@ -197,7 +176,6 @@ export function ServiceSelectionForm({
             </FormItem>
           )}
         />
-
         {/* Time Selection */}
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -228,27 +206,50 @@ export function ServiceSelectionForm({
             )}
           />
         </div>
-
         {/* Agreed Rate */}
         <FormField
           control={form.control}
           name="agreedRate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Agreed Rate ($)</FormLabel>
+              <FormLabel>Rate per Unit ($)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   step="0.01"
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    field.onChange(value);
+                  }}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
+        {/* Quantity */}
+        <FormField
+          control={form.control}
+          name="quantity"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Quantity</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="1"
+                  {...field}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 1;
+                    field.onChange(value);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         {/* Notes */}
         <FormField
           control={form.control}
@@ -267,8 +268,25 @@ export function ServiceSelectionForm({
           )}
         />
 
-        <div className="flex justify-end space-x-2">
-          <Button type="submit">Add Supplier</Button>
+        <div className="space-y-4">
+          {/* Display calculated total */}
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium">Total Cost</p>
+              <p className="text-xs text-muted-foreground">
+                {form.watch("quantity")} × ${form.watch("agreedRate")}
+              </p>
+            </div>
+            <div className="text-2xl font-bold">
+              ${calculatedTotal.toFixed(2)}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button type="submit">
+              Add Supplier (${calculatedTotal.toFixed(2)})
+            </Button>
+          </div>
         </div>
       </form>
     </Form>

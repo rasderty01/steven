@@ -4,8 +4,7 @@
 import { Database } from "@/utils/supabase/database.types";
 import { redirect } from "next/navigation";
 import { createServer } from "./supabase/server";
-
-type OrgRole = Database["public"]["Enums"]["OrgRole"];
+import { OrgRole } from "@/types";
 
 export async function checkRole(orgId: string, allowedRoles: OrgRole[]) {
   const supabase = await createServer();

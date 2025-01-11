@@ -9,21 +9,7 @@ import {
 import { Database } from "@/utils/supabase/database.types";
 import { format, formatDistanceToNow } from "date-fns";
 import { Calendar, Clock, Link as LinkIcon, MapPin, Users } from "lucide-react";
-
-// Base types from database
-type EventRow = Database["public"]["Tables"]["Event"]["Row"];
-type SeatingPlanRow = Database["public"]["Tables"]["SeatingPlan"]["Row"];
-type GuestRow = Database["public"]["Tables"]["Guest"]["Row"];
-type RSVPRow = Database["public"]["Tables"]["RSVP"]["Row"];
-
-// Define types for what we actually select
-type EventWithSeatingPlan = EventRow & {
-  SeatingPlan: Pick<SeatingPlanRow, "id" | "seating_plan_name"> | null;
-};
-
-type GuestWithRSVP = GuestRow & {
-  rsvp: Pick<RSVPRow, "attending" | "plusOne" | "dietaryPreferences"> | null;
-};
+import { EventWithSeatingPlan } from "@/types";
 
 export function EventDetailsComponent({
   event,

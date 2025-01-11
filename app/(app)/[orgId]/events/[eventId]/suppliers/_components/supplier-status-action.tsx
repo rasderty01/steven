@@ -7,10 +7,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SupplierStatus } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import { CheckCircle2, ChevronDown, Loader2, XCircle } from "lucide-react";
-
-type SupplierStatus = Database["public"]["Enums"]["SupplierStatus"];
 
 interface StatusActionsProps {
   currentStatus: SupplierStatus;

@@ -46,7 +46,7 @@ export function AddSupplierForm() {
           Add Supplier
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-2xl h-full overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Supplier</DialogTitle>
           <DialogDescription>

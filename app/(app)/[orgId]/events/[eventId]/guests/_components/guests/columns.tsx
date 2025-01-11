@@ -6,7 +6,7 @@ import { DataTableRowActions } from "./data-table-row-actions";
 import { ColumnDef } from "@tanstack/react-table";
 import { Database } from "@/utils/supabase/database.types";
 import { Checkbox } from "@/components/ui/checkbox";
-import { GuestWithRSVP } from "@/types/guest";
+import { GuestWithRSVP } from "@/types/guest.types";
 
 export const columns: ColumnDef<GuestWithRSVP>[] = [
   {

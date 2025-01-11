@@ -4,17 +4,17 @@ import { Database } from "@/utils/supabase/database.types";
 import { createServer } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
-// Base types from database
-type EventRow = Database["public"]["Tables"]["Event"]["Row"];
-type SeatingPlanRow = Database["public"]["Tables"]["SeatingPlan"]["Row"];
-type GuestRow = Database["public"]["Tables"]["Guest"]["Row"];
-type RSVPRow = Database["public"]["Tables"]["RSVP"]["Row"];
+import {
+  SeatingPlanRow,
+  EventRow,
+  GuestRow,
+  RSVPRow,
+  EventWithSeatingPlan,
+  EventPermissions,
+  RSVPStatus,
+} from "@/types";
 
 // Extended types with relationships
-type EventWithSeatingPlan = EventRow & {
-  SeatingPlan: Pick<SeatingPlanRow, "id" | "seating_plan_name"> | null;
-};
 
 type GuestWithRSVP = GuestRow & {
   rsvp: Pick<RSVPRow, "attending" | "plusOne" | "dietaryPreferences"> | null;
@@ -166,7 +166,7 @@ export async function deleteEvent(
 export async function checkEventAccess(
   userId: string,
   eventId: string,
-  requiredPermission: Database["public"]["Enums"]["EventPermissions"]
+  requiredPermission: EventPermissions
 ): Promise<boolean> {
   const supabase = await createServer();
 
@@ -192,7 +192,7 @@ export async function checkEventAccess(
 export async function updateRSVP(
   guestId: number,
   eventId: string,
-  status: Database["public"]["Enums"]["RSVPStatus"],
+  status: RSVPStatus,
   plusOne?: boolean,
   dietaryPreferences?: string
 ): Promise<void> {

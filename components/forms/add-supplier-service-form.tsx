@@ -28,10 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-
-type RateType = Database["public"]["Enums"]["RateType"];
-type SupplierService =
-  Database["public"]["Tables"]["SupplierService"]["Insert"];
+import { RateType, SupplierServiceInsert } from "@/types";
 
 interface AddSupplierServiceFormProps {
   supplierId: number;
@@ -42,11 +39,11 @@ export function AddSupplierServiceForm({
 }: AddSupplierServiceFormProps) {
   const [open, setOpen] = React.useState(false);
   const queryClient = useQueryClient();
-  const form = useForm<Omit<SupplierService, "supplierId">>();
+  const form = useForm<Omit<SupplierServiceInsert, "supplierId">>();
   const { orgId } = useParams() as { orgId: string };
 
   const { mutate: addService, isPending } = useMutation({
-    mutationFn: async (data: Omit<SupplierService, "supplierId">) => {
+    mutationFn: async (data: Omit<SupplierServiceInsert, "supplierId">) => {
       const result = await addSupplierService(
         supplierId,
         parseInt(orgId),
@@ -68,7 +65,7 @@ export function AddSupplierServiceForm({
     },
   });
 
-  function onSubmit(data: Omit<SupplierService, "supplierId">) {
+  function onSubmit(data: Omit<SupplierServiceInsert, "supplierId">) {
     addService(data);
   }
 

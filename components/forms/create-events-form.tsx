@@ -14,7 +14,11 @@ import { Input } from "@/components/ui/input";
 import { SmartDatetimeInput } from "@/components/ui/smart-datetime-input";
 import { Textarea } from "@/components/ui/textarea";
 import { createEvent } from "@/lib/actions/events";
-import { CreateEventFormData, createEventSchema } from "@/types/events";
+import {
+  CreateEventFormData,
+  createEventSchema,
+} from "@/lib/schemas/event.schema";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";

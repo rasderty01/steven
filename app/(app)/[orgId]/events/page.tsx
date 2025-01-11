@@ -16,9 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-
-type Event = Database["public"]["Tables"]["Event"]["Row"];
-type OrgRole = Database["public"]["Enums"]["OrgRole"];
+import { EventRow, OrgRole } from "@/types";
 
 async function getUserRole(orgId: string) {
   const supabase = await createServer();
@@ -58,7 +56,7 @@ async function getEvents(orgId: string) {
   return events;
 }
 
-function EventCard({ event }: { event: Event }) {
+function EventCard({ event }: { event: EventRow }) {
   return (
     <Card className="w-full">
       <CardHeader>

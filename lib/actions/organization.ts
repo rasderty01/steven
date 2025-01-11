@@ -1,7 +1,9 @@
 // app/actions/organization.ts
 "use server";
 
-import { CreateOrgFormData } from "@/types/organization";
+import { CreateOrgFormData } from "@/lib/schemas/organization.schema";
+import { OrganizationRow } from "@/types";
+import { Database } from "@/utils/supabase/database.types";
 import { createServer } from "@/utils/supabase/server";
 
 import { revalidatePath } from "next/cache";
@@ -9,7 +11,7 @@ import { cache } from "react";
 
 // Type for organization stats
 interface OrganizationStats {
-  organization: any; // Replace 'any' with your Organization type
+  organization: OrganizationRow;
   stats: {
     memberCount: number;
     activeEventsCount: number;

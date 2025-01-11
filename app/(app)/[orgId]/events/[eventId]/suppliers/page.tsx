@@ -1,9 +1,5 @@
 "use client";
 
-import {
-  ServiceSelectionForm,
-  ServiceSelectionFormData,
-} from "@/components/forms/supplier-service-selection-form";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +25,8 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SupplierStatusActions } from "./_components/supplier-status-action";
+import { ServiceSelectionFormData } from "@/lib/schemas/supplier-service.schema";
+import { ServiceSelectionForm } from "@/components/forms/supplier-service-selection-form";
 
 export default function SplitViewSupplierManagement() {
   const { eventId } = useParams();

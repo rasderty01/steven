@@ -1,9 +1,8 @@
 // middleware.ts
+import { OrgRole } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-
-type OrgRole = Database["public"]["Enums"]["OrgRole"];
 
 const PROTECTED_ROUTES = {
   owner: {

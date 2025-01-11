@@ -16,14 +16,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { SupplierFormValues, supplierSchema } from "@/lib/schemas/supplier";
+import {
+  SupplierFormValues,
+  supplierSchema,
+} from "@/lib/schemas/supplier.schema";
 import { formatSupplierCategory } from "@/lib/utils";
+import { SupplierCategory, SupplierRow } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-
-type SupplierCategory = Database["public"]["Enums"]["SupplierCategory"];
-type DatabaseSupplier = Database["public"]["Tables"]["Supplier"]["Row"];
 
 const supplierCategories: SupplierCategory[] = [
   "AV_Equipment",
@@ -42,7 +43,7 @@ const supplierCategories: SupplierCategory[] = [
 
 interface SupplierFormProps {
   onSubmit: (data: SupplierFormValues) => void;
-  defaultValues?: Partial<DatabaseSupplier>;
+  defaultValues?: Partial<SupplierRow>;
   isSubmitting?: boolean;
   submitLabel?: string;
   onCancel?: () => void;
@@ -86,7 +87,10 @@ export function SupplierForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4 overflow-y-auto w-full"
+      >
         <FormField
           control={form.control}
           name="name"

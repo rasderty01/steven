@@ -15,13 +15,12 @@ import { Database } from "@/utils/supabase/database.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { deleteGuest } from "../../actions";
-
-type Guest = Database["public"]["Tables"]["Guest"]["Row"];
+import { GuestRow } from "@/types";
 
 interface DeleteGuestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  guest: Guest;
+  guest: GuestRow;
   eventId: number;
 }
 

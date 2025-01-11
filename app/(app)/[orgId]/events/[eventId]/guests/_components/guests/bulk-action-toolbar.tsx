@@ -25,8 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type RSVPStatus = Database["public"]["Enums"]["RSVPStatus"];
+import { RSVPStatus } from "@/types";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;

@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createOrganization } from "@/lib/actions/organization";
-import { CreateOrgFormData, createOrgSchema } from "@/types/organization";
+import { CreateOrgFormData, createOrgSchema } from "@/types/organization.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";

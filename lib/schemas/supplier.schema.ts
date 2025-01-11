@@ -1,8 +1,7 @@
 // lib/validations/supplier.ts
+import { SupplierCategory } from "@/types";
 import { type Database } from "@/utils/supabase/database.types";
 import { z } from "zod";
-
-export type SupplierCategory = Database["public"]["Enums"]["SupplierCategory"];
 
 const supplierCategories: [SupplierCategory, ...SupplierCategory[]] = [
   "AV_Equipment",
@@ -33,34 +32,3 @@ export const supplierSchema = z.object({
 });
 
 export type SupplierFormValues = z.infer<typeof supplierSchema>;
-
-export type Supplier = Database["public"]["Tables"]["Supplier"]["Row"];
-export type SupplierService =
-  Database["public"]["Tables"]["SupplierService"]["Row"];
-export type EventSupplier =
-  Database["public"]["Tables"]["EventSupplier"]["Row"];
-
-// Enhanced types for joins and responses
-export type SupplierWithServices = Supplier & {
-  SupplierService: SupplierService[];
-};
-
-export type EventSupplierWithDetails = EventSupplier & {
-  supplier: Supplier;
-  service: SupplierService;
-};
-
-// Mutation input types
-export type AddSupplierInput = {
-  supplierId: number;
-  supplierServiceId: number;
-  startTime: string;
-  endTime: string;
-  agreedRate: number;
-  notes?: string;
-  eventId: number;
-};
-
-export type UpdateSupplierInput = Partial<EventSupplier> & {
-  id: number;
-};

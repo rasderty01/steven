@@ -15,14 +15,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  EventRow,
+  SeatingPlanRow,
+  GuestRow,
+  RSVPRow,
+  RSVPStatus,
+} from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 
 import { Mail, Phone } from "lucide-react";
-
-type EventRow = Database["public"]["Tables"]["Event"]["Row"];
-type SeatingPlanRow = Database["public"]["Tables"]["SeatingPlan"]["Row"];
-type GuestRow = Database["public"]["Tables"]["Guest"]["Row"];
-type RSVPRow = Database["public"]["Tables"]["RSVP"]["Row"];
 
 // Define types for what we actually select
 type EventWithSeatingPlan = EventRow & {
@@ -41,9 +43,7 @@ export function AttendeesListComponent({
     return `${firstName?.[0] || ""}${lastName[0] || ""}`.toUpperCase();
   };
 
-  const getRsvpStatusColor = (
-    status: Database["public"]["Enums"]["RSVPStatus"] | null
-  ) => {
+  const getRsvpStatusColor = (status: RSVPStatus | null) => {
     switch (status) {
       case "attending":
         return "bg-green-500";

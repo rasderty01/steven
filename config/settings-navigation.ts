@@ -1,7 +1,6 @@
 // config/settings-navigation.ts
+import { OrgRole } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
-
-type OrgRole = Database["public"]["Enums"]["OrgRole"];
 
 export const settingsNavItems = [
   {

@@ -5,11 +5,10 @@ import { usePermissions } from "@/components/hooks/usePermissions";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { OrgRole } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-type OrgRole = Database["public"]["Enums"]["OrgRole"];
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   items: {

@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { OrgRole } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import {
   Calendar,
@@ -23,8 +24,6 @@ import Link from "next/link";
 interface QuickActionsProps {
   orgId: string;
 }
-
-type OrgRole = Database["public"]["Enums"]["OrgRole"];
 
 interface ActionButton {
   href: string;

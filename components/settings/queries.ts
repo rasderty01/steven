@@ -1,4 +1,5 @@
 // components/settings/queries.ts
+import { OrganizationRow, Subscription } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/utils/supabase/database.types";
 import { useQuery } from "@tanstack/react-query";
@@ -11,12 +12,6 @@ export const queryKeys = {
     details: (orgId: string) => ["organization", orgId] as const,
   },
 } as const;
-
-type Organization = Database["public"]["Tables"]["Organization"]["Row"];
-type Subscription = Pick<
-  Database["public"]["Tables"]["User"]["Row"],
-  "subscriptionStatus" | "subscription_type"
->;
 
 export function useSubscriptionPlan(orgId: string) {
   return useQuery({
@@ -51,7 +46,7 @@ export function useOrganizationDetails(orgId: string) {
         .single();
 
       if (error) throw error;
-      return data as Organization;
+      return data as OrganizationRow;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

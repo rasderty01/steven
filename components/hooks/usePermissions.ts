@@ -1,17 +1,15 @@
 "use client";
 
+import { EventPermissions, OrgRole } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/utils/supabase/database.types";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useCallback } from "react";
 
-type EventPermission = Database["public"]["Enums"]["EventPermissions"];
-type OrgRole = Database["public"]["Enums"]["OrgRole"];
-
 // Define the permissions structure
 interface Permissions {
-  eventPermissions: EventPermission[];
+  eventPermissions: EventPermissions[];
   systemPermissions: string[];
 }
 
@@ -80,7 +78,7 @@ export function usePermissions() {
   });
 
   const hasEventPermission = useCallback(
-    (permission: EventPermission) => {
+    (permission: EventPermissions) => {
       if (!userData?.permissions?.eventPermissions) return false;
       return userData.permissions.eventPermissions.includes(permission);
     },
@@ -88,7 +86,7 @@ export function usePermissions() {
   );
 
   const hasAllEventPermissions = useCallback(
-    (requiredPermissions: EventPermission[]) => {
+    (requiredPermissions: EventPermissions[]) => {
       if (!userData?.permissions?.eventPermissions) return false;
       return requiredPermissions.every((permission) =>
         userData.permissions?.eventPermissions.includes(permission)

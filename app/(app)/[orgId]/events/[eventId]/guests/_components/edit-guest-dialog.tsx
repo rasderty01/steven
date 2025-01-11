@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { editGuestSchema, EditGuestSchema } from "@/lib/schemas/guest.schema";
+import { GuestWithRSVP } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import { type Database } from "@/utils/supabase/database.types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,40 +37,8 @@ import * as z from "zod";
 
 const supabase = createClient();
 
-const editGuestSchema = z.object({
-  title: z
-    .string()
-    .optional()
-    .transform((val) => val || null),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z
-    .string()
-    .email("Invalid email")
-    .optional()
-    .transform((val) => val || null),
-  phoneNumber: z
-    .string()
-    .optional()
-    .transform((val) => val || null),
-  role: z
-    .string()
-    .optional()
-    .transform((val) => val || null),
-});
-
-type EditGuestSchema = z.infer<typeof editGuestSchema>;
-
-type Guest = Database["public"]["Tables"]["Guest"]["Row"] & {
-  RSVP: {
-    attending: Database["public"]["Enums"]["RSVPStatus"] | null;
-    dietaryPreferences: string | null;
-    plusOne: boolean | null;
-  } | null;
-};
-
 interface EditGuestDialogProps {
-  guest: Guest;
+  guest: GuestWithRSVP;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

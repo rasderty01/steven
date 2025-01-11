@@ -1,13 +1,9 @@
 "use server";
 
+import { RateType, SupplierServiceInsert, SupplierUpdate } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import { createServer } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-
-type SupplierServiceInsert =
-  Database["public"]["Tables"]["SupplierService"]["Insert"];
-type RateType = Database["public"]["Enums"]["RateType"];
-type EventPermission = Database["public"]["Enums"]["EventPermissions"];
 
 export async function addSupplierService(
   supplierId: number,
@@ -215,7 +211,7 @@ export async function removeSupplier(supplierId: number, orgId: number) {
 export async function updateSupplier(
   supplierId: number,
   orgId: number,
-  data: Partial<Database["public"]["Tables"]["Supplier"]["Update"]>
+  data: SupplierUpdate
 ) {
   const supabase = await createServer();
   try {

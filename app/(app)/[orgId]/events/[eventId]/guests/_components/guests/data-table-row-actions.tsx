@@ -23,9 +23,8 @@ import { toast } from "sonner";
 import { updateGuestRSVP } from "../../actions";
 import { DeleteGuestDialog } from "./alert-dialog-delete";
 import { EditGuestDialog } from "../edit-guest-dialog";
-import { GuestWithRSVP } from "@/types/guest";
-
-type RSVPStatus = Database["public"]["Enums"]["RSVPStatus"];
+import { GuestWithRSVP } from "@/types/guest.types";
+import { RSVPStatus } from "@/types";
 
 interface DataTableRowActionsProps<TData extends GuestWithRSVP> {
   row: Row<TData>;

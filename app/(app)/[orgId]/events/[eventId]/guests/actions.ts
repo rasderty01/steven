@@ -2,13 +2,10 @@
 "use server";
 
 import { createServer } from "@/utils/supabase/server";
-import { Database } from "@/utils/supabase/database.types";
-import { revalidatePath } from "next/cache";
-import { GuestWithRSVP } from "@/types/guest";
 
-type Guest = Database["public"]["Tables"]["Guest"]["Row"];
-type RSVP = Database["public"]["Tables"]["RSVP"]["Row"];
-type RSVPStatus = Database["public"]["Enums"]["RSVPStatus"];
+import { revalidatePath } from "next/cache";
+import { GuestWithRSVP } from "@/types/guest.types";
+import { RSVPStatus } from "@/types";
 
 export async function updateGuestRSVP({
   guestId,

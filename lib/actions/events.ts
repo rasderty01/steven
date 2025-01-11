@@ -1,5 +1,5 @@
 "use server";
-import { CreateEventFormData } from "@/types/events";
+import { CreateEventFormData } from "@/types/events.types";
 import { createServer } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 

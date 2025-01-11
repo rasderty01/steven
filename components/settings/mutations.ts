@@ -4,11 +4,9 @@ import { Database } from "@/utils/supabase/database.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryKeys } from "./queries";
+import { OrganizationUpdate } from "@/types";
 
 const supabase = createClient();
-
-type Organization = Database["public"]["Tables"]["Organization"]["Row"];
-type OrganizationUpdate = Pick<Organization, "name" | "description">;
 
 export function useUpdateOrganization(orgId: string) {
   const queryClient = useQueryClient();

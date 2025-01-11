@@ -9,13 +9,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { SupplierRow } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import React from "react";
 
-type Supplier = Database["public"]["Tables"]["Supplier"]["Row"];
-
 // View Details Dialog
-export function ViewSupplierDetails({ supplier }: { supplier: Supplier }) {
+export function ViewSupplierDetails({ supplier }: { supplier: SupplierRow }) {
   const [open, setOpen] = React.useState(false);
 
   return (

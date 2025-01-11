@@ -36,6 +36,7 @@ import {
   sendInvitationsSchema,
   TemplateType,
 } from "@/components/sendinvitationdialog/types";
+import { RSVPStatus } from "@/types";
 
 const supabase = createClient();
 
@@ -45,7 +46,7 @@ export interface Guest {
   lastName: string;
   email: string | null;
   RSVP: {
-    attending: Database["public"]["Enums"]["RSVPStatus"];
+    attending: RSVPStatus;
   } | null;
 }
 

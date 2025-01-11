@@ -12,8 +12,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/utils/supabase/database.types";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-type User = Database["public"]["Tables"]["User"]["Row"];
+import { UserRow } from "@/types";
 
 export default function ProfilePage() {
   const supabase = createClient();
@@ -27,7 +26,7 @@ export default function ProfilePage() {
   });
 
   // Fetch user profile data
-  const { data: user, isLoading } = useQuery<User>({
+  const { data: user, isLoading } = useQuery<UserRow>({
     queryKey: ["profile"],
     queryFn: async () => {
       const {
@@ -48,7 +47,7 @@ export default function ProfilePage() {
 
   // Update profile mutation
   const updateProfile = useMutation({
-    mutationFn: async (updates: Partial<User>) => {
+    mutationFn: async (updates: Partial<UserRow>) => {
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser();

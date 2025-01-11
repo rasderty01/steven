@@ -1,12 +1,12 @@
-import { createClient } from "@/utils/supabase/client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
   AddSupplierInput,
   EventSupplierWithDetails,
   SupplierWithServices,
   UpdateSupplierInput,
-} from "../schemas/supplier";
+} from "@/types";
+import { createClient } from "@/utils/supabase/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const supabase = createClient();
 

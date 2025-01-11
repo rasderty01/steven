@@ -38,23 +38,12 @@ import { RemoveSupplier } from "./remove-supplier-action";
 import { DeleteSupplierService } from "./remove-supplier-service-action";
 import { VerifySupplier } from "./verify-supplier-action";
 import { ViewSupplierDetails } from "./view-details-action";
-type SupplierBase = Database["public"]["Tables"]["Supplier"]["Row"];
-type SupplierServiceBase =
-  Database["public"]["Tables"]["SupplierService"]["Row"];
+import { Supplier } from "@/types";
 
-type QuerySupplierService = Pick<
-  SupplierServiceBase,
-  "id" | "name" | "baseRate" | "rateType" | "description"
->;
-
-export type Supplier = SupplierBase & {
-  services?: QuerySupplierService[];
-};
-
-interface SuppliersListProps {
+type SuppliersListProps = {
   suppliers?: Supplier[];
   showServices?: boolean;
-}
+};
 
 export function SuppliersList({ suppliers, showServices }: SuppliersListProps) {
   const [expandedSupplier, setExpandedSupplier] = useState<number | null>(null);

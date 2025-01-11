@@ -3,24 +3,10 @@ import { createClient } from "@/utils/supabase/client";
 import { Database } from "@/utils/supabase/database.types";
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
+import { EventRow, Team } from "@/types";
+import { UserProfile } from "@/types/user.types";
 
 const supabase = createClient();
-
-type Event = Database["public"]["Tables"]["Event"]["Row"];
-
-export type Team = {
-  id: number;
-  name: string;
-  logo_url: string | null;
-  plan: Database["public"]["Enums"]["SubscriptionStatus"];
-};
-
-type UserProfile = {
-  name: string;
-  email: string;
-  subscriptionStatus: Database["public"]["Enums"]["SubscriptionStatus"];
-  avatar?: string;
-};
 
 export function useUserProfile() {
   return useQuery({
@@ -95,7 +81,7 @@ export function useOrganizations() {
 }
 
 export function useOrganizationEvents(orgId: string) {
-  return useQuery<Event[]>({
+  return useQuery<EventRow[]>({
     queryKey: queryKeys.events.byOrg(orgId),
     queryFn: async () => {
       const { data, error } = await supabase
@@ -115,7 +101,7 @@ export function useOrganizationEvents(orgId: string) {
 }
 
 // Helper function to transform events for sidebar display
-export function transformEventsForSidebar(events: Event[]) {
+export function transformEventsForSidebar(events: EventRow[]) {
   return events.map((event) => ({
     id: event.id,
     name: event.title,

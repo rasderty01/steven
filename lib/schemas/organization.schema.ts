@@ -9,14 +9,3 @@ export const createOrgSchema = z.object({
 
 // Type for organization creation form
 export type CreateOrgFormData = z.infer<typeof createOrgSchema>;
-
-// Type based on database schema
-export interface Organization {
-  id: string;
-  clerkOrgID: string;
-  name: string;
-  description: string | null;
-  eventId: number | null;
-  createdAt: string;
-  updatedAt: string;
-}

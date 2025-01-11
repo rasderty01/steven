@@ -1,5 +1,6 @@
 "use server";
 
+import { EventStatus } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import { createServer } from "@/utils/supabase/server";
 import { encodedRedirect } from "@/utils/utils";
@@ -39,8 +40,6 @@ export const signUpAction = async (formData: FormData) => {
     );
   }
 };
-
-type EventStatus = Database["public"]["Enums"]["EventStatus"];
 
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;

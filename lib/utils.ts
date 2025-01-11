@@ -1,3 +1,4 @@
+import { SupplierCategory } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -14,8 +15,6 @@ export const formatCurrency = (amount: number) => {
     maximumFractionDigits: 2,
   }).format(amount);
 };
-
-type SupplierCategory = Database["public"]["Enums"]["SupplierCategory"];
 
 export function formatSupplierCategory(category: SupplierCategory): string {
   // Handle special cases first

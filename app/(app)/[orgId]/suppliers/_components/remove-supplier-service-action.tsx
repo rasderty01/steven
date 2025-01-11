@@ -13,19 +13,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { SupplierServicePick } from "@/types";
 import { Database } from "@/utils/supabase/database.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
-type SupplierService = Pick<
-  Database["public"]["Tables"]["SupplierService"]["Row"],
-  "id" | "name"
->;
-
 interface DeleteSupplierServiceProps {
-  service: SupplierService;
+  service: SupplierServicePick;
 }
 
 export function DeleteSupplierService({ service }: DeleteSupplierServiceProps) {
