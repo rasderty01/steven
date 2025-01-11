@@ -212,7 +212,7 @@ export function ServiceSelectionForm({
           name="agreedRate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Rate per Unit ($)</FormLabel>
+              <FormLabel>Rate per Unit (₱)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -274,17 +274,17 @@ export function ServiceSelectionForm({
             <div className="space-y-0.5">
               <p className="text-sm font-medium">Total Cost</p>
               <p className="text-xs text-muted-foreground">
-                {form.watch("quantity")} × ${form.watch("agreedRate")}
+                {form.watch("quantity")} × ₱{form.watch("agreedRate")}
               </p>
             </div>
             <div className="text-2xl font-bold">
-              ${calculatedTotal.toFixed(2)}
+              ₱{calculatedTotal.toFixed(2)}
             </div>
           </div>
 
           <div className="flex justify-end space-x-2">
             <Button type="submit">
-              Add Supplier (${calculatedTotal.toFixed(2)})
+              Add Supplier (₱{calculatedTotal.toFixed(2)})
             </Button>
           </div>
         </div>

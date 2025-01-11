@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "../ui/button";
+import { Button } from "../../../../../../components/ui/button";
 import { useSubscriptionPlan } from "./queries";
 
 const subscriptionPlans = [
@@ -58,8 +58,6 @@ const subscriptionPlans = [
 ];
 
 export function BillingTab({ orgId }: { orgId: string }) {
-  const supabase = createClient();
-
   const { data: subscription } = useSubscriptionPlan(orgId);
 
   const handleUpgrade = (plan: string) => {

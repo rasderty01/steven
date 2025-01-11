@@ -1,7 +1,8 @@
-import { BillingTab } from "@/components/settings/billing-tab";
+import { BillingTab } from "@/app/(app)/[orgId]/settings/_components/settings/billing-tab";
 import { Separator } from "@/components/ui/separator";
-import { getOrganizationData } from "@/lib/actions/organization";
+
 import { checkRole } from "@/utils/auth";
+
 interface PageProps {
   params: {
     orgId: string;
@@ -9,7 +10,6 @@ interface PageProps {
 }
 export default async function BillingPage({ params }: PageProps) {
   const { orgId } = await params;
-  const { organization } = await getOrganizationData(orgId);
 
   await checkRole(orgId, ["Owner"]);
 

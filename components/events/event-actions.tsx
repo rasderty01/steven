@@ -29,8 +29,6 @@ interface EventActionsProps {
 
 export function EventActions({ eventId, orgId }: EventActionsProps) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const { hasEventPermission } = usePermissions();
 
   const canEdit = hasEventPermission("EDIT");

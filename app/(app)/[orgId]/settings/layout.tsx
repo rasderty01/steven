@@ -1,5 +1,5 @@
 // app/[orgId]/settings/layout.tsx
-import SidebarNav from "@/components/settings/sidebar-settings";
+import SidebarNav from "@/app/(app)/[orgId]/settings/_components/settings/sidebar-settings";
 import { Separator } from "@/components/ui/separator";
 import { settingsNavItems } from "@/config/settings-navigation";
 

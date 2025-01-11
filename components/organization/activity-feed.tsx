@@ -1,19 +1,14 @@
 // components/organization/ActivityFeed.tsx
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EventRow, UserRow } from "@/types";
 import { CalendarDays } from "lucide-react";
 
 interface ActivityFeedProps {
-  events: Array<{
-    id: number;
-    title: string;
-    startTime: string;
-    endTime: string;
-    status: "Draft" | "Published";
-    User: {
-      name: string | null;
-      email: string;
-    };
-  }>;
+  events: Array<
+    Pick<EventRow, "id" | "title" | "startTime" | "endTime" | "status"> & {
+      User: Pick<UserRow, "name" | "email">;
+    }
+  >;
 }
 
 export function ActivityFeed({ events }: ActivityFeedProps) {

@@ -6,13 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { useOrganizationDetails } from "./queries";
 import { useUpdateOrganization } from "./mutations";
+import { OrganizationRow } from "@/types";
 
 interface GeneralTabProps {
   orgId: string;
+  organization: OrganizationRow;
 }
 
-export function GeneralTab({ orgId }: GeneralTabProps) {
-  const { data: organization, isLoading } = useOrganizationDetails(orgId);
+export function GeneralTab({ orgId, organization }: GeneralTabProps) {
   const updateOrganization = useUpdateOrganization(orgId);
 
   const { register, handleSubmit } = useForm({
@@ -21,10 +22,6 @@ export function GeneralTab({ orgId }: GeneralTabProps) {
       description: organization?.description || "",
     },
   });
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="rounded-lg p-4">
