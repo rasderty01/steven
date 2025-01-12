@@ -1,61 +1,72 @@
-// app/[orgId]/events/[eventId]/suppliers/actions.ts
+// actions/supplier.ts
 "use server";
 
 import {
-  SupplierFormValues,
-  supplierSchema,
-} from "@/lib/schemas/supplier.schema";
-import { SupplierCategory, SupplierInsert } from "@/types";
-import { Database } from "@/utils/supabase/database.types";
+  AddSupplierInput,
+  UpdateSupplierInput,
+  EventSupplierWithDetails,
+} from "@/types";
 import { createServer } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function createSupplier(formData: SupplierFormValues) {
-  try {
-    // Server-side validation
-    const validatedData = supplierSchema.parse(formData);
+// Server action to add a supplier to an event
+export async function addEventSupplier(params: AddSupplierInput) {
+  const supabase = await createServer();
 
-    const supabase = await createServer();
+  const { data, error } = await supabase
+    .from("EventSupplier")
+    .insert(params)
+    .select(
+      `
+      *,
+      supplier:Supplier(*),
+      service:SupplierService(*)
+    `
+    )
+    .single();
 
-    // Get user session
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      throw new Error("Unauthorized");
-    }
-
-    // Prepare data according to database schema
-    const supplierData: SupplierInsert = {
-      name: validatedData.name,
-      category: validatedData.category as SupplierCategory,
-      contactName: validatedData.contactName,
-      email: validatedData.email,
-      phone: validatedData.phone,
-      description: validatedData.description || null,
-      website: validatedData.website || null,
-      address: validatedData.address || null,
-    };
-
-    // Insert supplier
-    const { data: supplier, error: supplierError } = await supabase
-      .from("Supplier")
-      .insert(supplierData)
-      .select()
-      .single();
-
-    if (supplierError) {
-      throw new Error(supplierError.message);
-    }
-
-    revalidatePath("/[orgId]/events/[eventId]/suppliers");
-
-    return { success: true, data: supplier };
-  } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: "Something went wrong" };
+  if (error) {
+    throw new Error(error.message);
   }
+
+  revalidatePath(`/events/${params.eventId}/suppliers`);
+  return data as EventSupplierWithDetails;
+}
+
+// Server action to remove a supplier from an event
+export async function removeEventSupplier(
+  eventSupplierId: number,
+  eventId: number
+) {
+  const supabase = await createServer();
+
+  const { error } = await supabase
+    .from("EventSupplier")
+    .delete()
+    .eq("id", eventSupplierId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/events/${eventId}/suppliers`);
+}
+
+// Server action to update an event supplier
+export async function updateEventSupplier(
+  { id, ...params }: UpdateSupplierInput,
+  eventId: number
+) {
+  const supabase = await createServer();
+
+  const { error } = await supabase
+    .from("EventSupplier")
+    .update(params)
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/events/${eventId}/suppliers`);
 }

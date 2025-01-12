@@ -1,10 +1,12 @@
 "use client";
-import { Database } from "@/utils/supabase/database.types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import React from "react";
-import { useForm } from "react-hook-form";
 
-import { addSupplierService } from "@/app/(app)/[orgId]/suppliers/actions";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import { Edit2, Plus } from "lucide-react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,8 +17,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,136 +34,298 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
-import { useParams } from "next/navigation";
-import { toast } from "sonner";
-import { RateType, SupplierServiceInsert } from "@/types";
+import {
+  RateType,
+  Supplier,
+  SupplierServiceInsert,
+  SupplierServiceRow,
+} from "@/types";
+import {
+  addSupplierService,
+  updateSupplierService,
+} from "@/app/(app)/[orgId]/suppliers/actions";
+import {
+  supplierServiceForm,
+  SupplierServiceValues,
+} from "@/lib/schemas/supplier-service.schema";
+import { useState } from "react";
 
-interface AddSupplierServiceFormProps {
+interface SupplierServiceFormProps {
   supplierId: number;
+  service?: SupplierServiceRow; // Optional for create mode
+  children: React.ReactNode;
 }
 
-export function AddSupplierServiceForm({
+export function SupplierServiceForm({
   supplierId,
-}: AddSupplierServiceFormProps) {
-  const [open, setOpen] = React.useState(false);
+  service,
+  children,
+}: SupplierServiceFormProps) {
+  const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
-  const form = useForm<Omit<SupplierServiceInsert, "supplierId">>();
   const { orgId } = useParams() as { orgId: string };
+  const isEditing = !!service;
 
-  const { mutate: addService, isPending } = useMutation({
-    mutationFn: async (data: Omit<SupplierServiceInsert, "supplierId">) => {
-      const result = await addSupplierService(
-        supplierId,
-        parseInt(orgId),
-        data
-      );
-      if (result.error) throw new Error(result.error);
-      return result.data;
-    },
-    onSuccess: () => {
-      toast.success("Service added successfully");
-      queryClient.invalidateQueries({ queryKey: ["org-suppliers"] });
-      setOpen(false);
-      form.reset();
-    },
-    onError: (error) => {
-      toast.error("Failed to add service", {
-        description: error.message,
-      });
+  const form = useForm<SupplierServiceValues>({
+    resolver: zodResolver(supplierServiceForm),
+    defaultValues: {
+      name: service?.name ?? "",
+      description: service?.description ?? "",
+      baseRate: service?.baseRate ?? 0,
+      rateType: service?.rateType ?? "Hourly",
+      minimumHours: service?.minimumHours ?? 0,
+      maximumHours: service?.maximumHours ?? 0,
     },
   });
 
-  function onSubmit(data: Omit<SupplierServiceInsert, "supplierId">) {
-    addService(data);
+  const { mutate: mutateService, isPending } = useMutation({
+    mutationFn: async (data: SupplierServiceValues) => {
+      if (isEditing) {
+        return updateSupplierService(service.id, parseInt(orgId), data);
+      } else {
+        const result = await addSupplierService(
+          supplierId,
+          parseInt(orgId),
+          data as Omit<SupplierServiceInsert, "supplierId">
+        );
+        if (result.error) throw new Error(result.error);
+        return result.data;
+      }
+    },
+
+    onMutate: async (newService) => {
+      await queryClient.cancelQueries({ queryKey: ["org-suppliers"] });
+      const previousSuppliers = queryClient.getQueryData<Supplier[]>([
+        "org-suppliers",
+      ]);
+
+      // Create optimistic service
+      const optimisticService = {
+        id: isEditing ? service.id : Date.now(),
+        supplierId,
+        name: newService.name,
+        baseRate: newService.baseRate,
+        rateType: newService.rateType,
+        description: newService.description ?? null,
+        createdAt: isEditing ? service.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        minimumHours: newService.minimumHours,
+        maximumHours: newService.maximumHours,
+      };
+
+      // Update cache
+      queryClient.setQueryData<Supplier[]>(["org-suppliers"], (old = []) =>
+        old.map((supplier) => {
+          if (supplier.id === supplierId) {
+            const services = [...(supplier.services || [])];
+            if (isEditing) {
+              const index = services.findIndex((s) => s.id === service.id);
+              if (index !== -1) services[index] = optimisticService;
+            } else {
+              services.push(optimisticService);
+            }
+            return { ...supplier, services };
+          }
+          return supplier;
+        })
+      );
+
+      setOpen(false);
+      return { previousSuppliers };
+    },
+
+    onError: (err, newService, context) => {
+      if (context?.previousSuppliers) {
+        queryClient.setQueryData(["org-suppliers"], context.previousSuppliers);
+      }
+      toast.error(`Failed to ${isEditing ? "update" : "add"} service`, {
+        description: err.message,
+      });
+    },
+
+    onSuccess: () => {
+      toast.success(`Service ${isEditing ? "updated" : "added"} successfully`);
+      form.reset();
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-suppliers"] });
+    },
+  });
+
+  function onSubmit(data: SupplierServiceValues) {
+    mutateService(data);
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Add a Service
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <DialogHeader>
-            <DialogTitle>Add New Service</DialogTitle>
-            <DialogDescription>
-              Add a new service offering with rates and details.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Service Name</Label>
-              <Input
-                id="name"
-                {...form.register("name", { required: true })}
-                placeholder="e.g. Basic Sound System Package"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="rateType">Rate Type</Label>
-              <Select
-                onValueChange={(value) =>
-                  form.setValue("rateType", value as RateType)
-                }
-                defaultValue={form.getValues("rateType")}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select rate type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Hourly">Hourly</SelectItem>
-                  <SelectItem value="Daily">Daily</SelectItem>
-                  <SelectItem value="Fixed">Fixed</SelectItem>
-                  <SelectItem value="PerPerson">Per Person</SelectItem>
-                  <SelectItem value="Custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="baseRate">Base Rate ($)</Label>
-              <Input
-                id="baseRate"
-                type="number"
-                step="0.01"
-                {...form.register("baseRate", {
-                  required: true,
-                  valueAsNumber: true,
-                  min: 0,
-                })}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                {...form.register("description")}
-                placeholder="Describe what's included in this service..."
-              />
-            </div>
-            {form.formState.errors.baseRate?.type === "min" && (
-              <p className="text-sm text-red-500">
-                Base rate must be a positive number
-              </p>
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? "Edit Service" : "Add New Service"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? "Update service details and rates."
+              : "Add a new service offering with rates and details."}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Form fields stay the same */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Service Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="e.g. Basic Sound System Package"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="rateType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rate Type</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select rate type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Hourly">Hourly</SelectItem>
+                      <SelectItem value="Daily">Daily</SelectItem>
+                      <SelectItem value="Fixed">Fixed</SelectItem>
+                      <SelectItem value="PerPerson">Per Person</SelectItem>
+                      <SelectItem value="Custom">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="baseRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Base Rate ($)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Describe what's included in this service..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch("rateType") === "Hourly" && (
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="minimumHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Min. Hours</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          value={field.value ?? 0}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value ? Number(e.target.value) : 0
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="maximumHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Max. Hours</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          value={field.value ?? 0}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value ? Number(e.target.value) : 0
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Adding..." : "Add Service"}
-            </Button>
-          </DialogFooter>
-        </form>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending
+                  ? isEditing
+                    ? "Updating..."
+                    : "Adding..."
+                  : isEditing
+                    ? "Update Service"
+                    : "Add Service"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

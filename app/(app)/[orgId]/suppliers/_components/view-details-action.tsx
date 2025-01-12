@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { SupplierRow } from "@/types";
-import { Database } from "@/utils/supabase/database.types";
+
 import React from "react";
 
 // View Details Dialog

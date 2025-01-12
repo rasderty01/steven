@@ -1,4 +1,3 @@
-import { AddSupplierServiceForm } from "@/components/forms/add-supplier-service-form";
 import { EmptyState } from "@/components/states/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,7 @@ import {
   Mail,
   MoreVertical,
   Phone,
+  Plus,
 } from "lucide-react";
 import React, { useState } from "react";
 import { EditSupplier } from "./edit-supplier-action";
@@ -39,6 +39,8 @@ import { DeleteSupplierService } from "./remove-supplier-service-action";
 import { VerifySupplier } from "./verify-supplier-action";
 import { ViewSupplierDetails } from "./view-details-action";
 import { Supplier } from "@/types";
+import { EditSupplierService } from "./edit-supplier-service-action";
+import { SupplierServiceForm } from "@/components/forms/add-supplier-service-form";
 
 type SuppliersListProps = {
   suppliers?: Supplier[];
@@ -163,7 +165,12 @@ export function SuppliersList({ suppliers, showServices }: SuppliersListProps) {
                     <div className="p-4 bg-muted/50">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold">Offers and rates</h4>
-                        <AddSupplierServiceForm supplierId={supplier.id} />
+                        <SupplierServiceForm supplierId={supplier.id}>
+                          <Button size="sm">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add a Service
+                          </Button>
+                        </SupplierServiceForm>
                       </div>
                       {supplier.services?.length ? (
                         <div className="border rounded-lg bg-background">
@@ -173,6 +180,8 @@ export function SuppliersList({ suppliers, showServices }: SuppliersListProps) {
                                 <TableHead>Service</TableHead>
                                 <TableHead>Rate Type</TableHead>
                                 <TableHead>Base Rate</TableHead>
+                                <TableHead>Min Hours</TableHead>
+                                <TableHead>Max Hours</TableHead>
                                 <TableHead className="text-right">
                                   Actions
                                 </TableHead>
@@ -191,6 +200,12 @@ export function SuppliersList({ suppliers, showServices }: SuppliersListProps) {
                                   <TableCell>
                                     {formatCurrency(service.baseRate)}
                                   </TableCell>
+                                  <TableCell>
+                                    {service.minimumHours ?? "N/A"}
+                                  </TableCell>
+                                  <TableCell>
+                                    {service.maximumHours ?? "N/A"}
+                                  </TableCell>
                                   <TableCell className="text-right">
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
@@ -203,10 +218,16 @@ export function SuppliersList({ suppliers, showServices }: SuppliersListProps) {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
-                                        <DropdownMenuItem className="flex items-center gap-2">
-                                          <Edit2 className="h-4 w-4" /> Edit
-                                          Service
-                                        </DropdownMenuItem>
+                                        <SupplierServiceForm
+                                          service={service}
+                                          supplierId={supplier.id}
+                                        >
+                                          <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted flex items-center gap-2">
+                                            <Edit2 className="h-4 w-4" /> Edit
+                                            Service
+                                          </button>
+                                        </SupplierServiceForm>
+                                        <DropdownMenuSeparator />
                                         <DropdownMenuSeparator />
 
                                         <DeleteSupplierService

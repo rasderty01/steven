@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -25,13 +26,14 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ServiceSelectionFormData,
   supplierServiceSchema,
-} from "@/lib/schemas/supplier-service.schema";
+} from "@/lib/schemas/event-supplier.schema";
 
 import { cn } from "@/lib/utils";
 import { SupplierWithServices } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -48,14 +50,18 @@ export function ServiceSelectionForm({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
+  const { eventId } = useParams();
+
+  // Get default service - we know services array is not empty
+  const defaultService = supplier.services[0];
 
   const form = useForm<z.infer<typeof supplierServiceSchema>>({
     resolver: zodResolver(supplierServiceSchema),
     defaultValues: {
-      supplierServiceId: supplier.SupplierService[0]?.id,
+      supplierServiceId: defaultService.id,
       startTime: "",
       endTime: "",
-      agreedRate: 0,
+      agreedRate: defaultService.baseRate,
       quantity: 1,
       notes: "",
     },
@@ -63,9 +69,7 @@ export function ServiceSelectionForm({
 
   // When service is selected, update the agreed rate to the base rate
   const handleServiceChange = (serviceId: string) => {
-    const service = supplier.SupplierService.find(
-      (s) => s.id === parseInt(serviceId)
-    );
+    const service = supplier.services.find((s) => s.id === parseInt(serviceId));
     if (service) {
       const quantity = form.getValues("quantity") || 1;
       form.setValue("agreedRate", service.baseRate);
@@ -84,14 +88,15 @@ export function ServiceSelectionForm({
     const [endHours, endMinutes] = values.endTime.split(":");
     endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
 
+    // Destructure to separate quantity from the rest of the form data
+    const { quantity, ...submissionData } = values;
+
     onSubmit({
+      ...submissionData,
+      eventId: parseFloat(eventId as string),
       supplierId: supplier.id,
-      supplierServiceId: values.supplierServiceId,
       startTime: startDateTime.toISOString(),
       endTime: endDateTime.toISOString(),
-      agreedRate: values.agreedRate,
-      notes: values.notes,
-      quantity: values.quantity,
     });
   };
 
@@ -105,6 +110,7 @@ export function ServiceSelectionForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {/* Service Selection */}
+
         <FormField
           control={form.control}
           name="supplierServiceId"
@@ -116,6 +122,7 @@ export function ServiceSelectionForm({
                   field.onChange(parseInt(value));
                   handleServiceChange(value);
                 }}
+                defaultValue={field.value?.toString()}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -123,7 +130,7 @@ export function ServiceSelectionForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {supplier.SupplierService.map((service) => (
+                  {supplier.services.map((service) => (
                     <SelectItem key={service.id} value={service.id.toString()}>
                       {service.name} - ${service.baseRate} ({service.rateType})
                     </SelectItem>

@@ -18,8 +18,9 @@ import { useMemo, useState } from "react";
 
 import { LoadingState } from "@/components/states/LoadingState";
 import { NoPermissionState } from "@/components/states/NoPermissionsState";
-import { Supplier, SuppliersList } from "./_components/SuppliersList";
+import { SuppliersList } from "./_components/SuppliersList";
 import { AddSupplierForm } from "./_components/add-supplier-action";
+import { Supplier } from "@/types";
 
 const supabase = createClient();
 
@@ -32,7 +33,7 @@ export default function OrganizationSuppliersPage() {
     usePermissions();
 
   const { data: suppliers, isLoading: suppliersLoading } = useQuery({
-    queryKey: ["org-suppliers", orgId],
+    queryKey: ["org-suppliers"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("Supplier")

@@ -1,65 +1,26 @@
-import {
-  AddSupplierInput,
-  EventSupplierWithDetails,
-  SupplierWithServices,
-  UpdateSupplierInput,
-} from "@/types";
-import { createClient } from "@/utils/supabase/client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+"use client";
 
-const supabase = createClient();
+import {
+  addEventSupplier,
+  removeEventSupplier,
+  updateEventSupplier,
+} from "@/app/(app)/[orgId]/events/[eventId]/suppliers/actions";
+import { AddSupplierInput, UpdateSupplierInput } from "@/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function useSupplierManagement(eventId: string) {
   const queryClient = useQueryClient();
-
-  // Query: Get all suppliers with their services
-  const { data: suppliers, isLoading: loadingSuppliers } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: async (): Promise<SupplierWithServices[]> => {
-      const { data, error } = await supabase
-        .from("Supplier")
-        .select("*, SupplierService(*)");
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Query: Get event suppliers with details
-  const { data: eventSuppliers, isLoading: loadingEventSuppliers } = useQuery({
-    queryKey: ["event-suppliers", eventId],
-    queryFn: async (): Promise<EventSupplierWithDetails[]> => {
-      const { data, error } = await supabase
-        .from("EventSupplier")
-        .select(
-          `
-          *,
-          supplier:Supplier(*),
-          service:SupplierService(*)
-        `
-        )
-        .eq("eventId", Number(eventId));
-
-      if (error) throw error;
-      return data;
-    },
-  });
+  const router = useRouter();
 
   // Mutation: Add supplier to event
   const addSupplier = useMutation({
-    mutationFn: async (params: AddSupplierInput) => {
-      const { data, error } = await supabase
-        .from("EventSupplier")
-        .insert(params)
-        .select();
-
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (params: AddSupplierInput) => addEventSupplier(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-suppliers", eventId] });
       toast.success("Supplier added successfully");
+      router.refresh();
     },
     onError: (error: Error) => {
       toast.error(`Failed to add supplier: ${error.message}`);
@@ -68,17 +29,12 @@ export function useSupplierManagement(eventId: string) {
 
   // Mutation: Remove supplier from event
   const removeSupplier = useMutation({
-    mutationFn: async (eventSupplierId: number) => {
-      const { error } = await supabase
-        .from("EventSupplier")
-        .delete()
-        .eq("id", eventSupplierId);
-
-      if (error) throw error;
-    },
+    mutationFn: (eventSupplierId: number) =>
+      removeEventSupplier(eventSupplierId, Number(eventId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-suppliers", eventId] });
       toast.success("Supplier removed successfully");
+      router.refresh();
     },
     onError: (error: Error) => {
       toast.error(`Failed to remove supplier: ${error.message}`);
@@ -87,17 +43,12 @@ export function useSupplierManagement(eventId: string) {
 
   // Mutation: Update event supplier
   const updateSupplier = useMutation({
-    mutationFn: async ({ id, ...params }: UpdateSupplierInput) => {
-      const { error } = await supabase
-        .from("EventSupplier")
-        .update(params)
-        .eq("id", id);
-
-      if (error) throw error;
-    },
+    mutationFn: (input: UpdateSupplierInput) =>
+      updateEventSupplier(input, Number(eventId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-suppliers", eventId] });
       toast.success("Supplier updated successfully");
+      router.refresh();
     },
     onError: (error: Error) => {
       toast.error(`Failed to update supplier: ${error.message}`);
@@ -105,13 +56,6 @@ export function useSupplierManagement(eventId: string) {
   });
 
   return {
-    // Queries
-    suppliers,
-    eventSuppliers,
-    loadingSuppliers,
-    loadingEventSuppliers,
-
-    // Mutations
     addSupplier,
     removeSupplier,
     updateSupplier,

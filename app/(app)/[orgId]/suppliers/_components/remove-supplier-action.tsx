@@ -1,5 +1,5 @@
 "use client";
-import { Supplier } from "@/app/(app)/[orgId]/suppliers/_components/SuppliersList";
+
 import { removeSupplier } from "@/app/(app)/[orgId]/suppliers/actions";
 import {
   AlertDialog,
@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Supplier } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";

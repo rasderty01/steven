@@ -17,12 +17,12 @@ export type SupplierInsert = Database["public"]["Tables"]["Supplier"]["Insert"];
 
 //joined tables
 export type Supplier = SupplierRow & {
-  services?: QuerySupplierService[];
+  services?: SupplierServiceRow[];
 };
 
 // Enhanced types for joins and responses
-export type SupplierWithServices = Supplier & {
-  SupplierService: SupplierServiceRow[];
+export type SupplierWithServices = SupplierRow & {
+  services: SupplierServiceRow[];
 };
 
 export type EventSupplierWithDetails = EventSupplier & {

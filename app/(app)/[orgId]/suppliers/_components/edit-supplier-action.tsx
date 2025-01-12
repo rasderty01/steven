@@ -16,7 +16,7 @@ import { SupplierForm } from "@/components/forms/supplier-form";
 import { SupplierFormValues } from "@/lib/schemas/supplier.schema";
 import { useParams } from "next/navigation";
 import { updateSupplier } from "../actions";
-import { Supplier } from "./SuppliersList";
+import { Supplier } from "@/types";
 
 interface EditSupplierProps {
   supplier: Supplier;
