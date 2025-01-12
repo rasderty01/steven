@@ -20,7 +20,7 @@ export function useSupplierManagement(eventId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-suppliers", eventId] });
       toast.success("Supplier added successfully");
-      router.refresh();
+      window.location.reload();
     },
     onError: (error: Error) => {
       toast.error(`Failed to add supplier: ${error.message}`);

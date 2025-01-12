@@ -49,7 +49,7 @@ export async function removeEventSupplier(
     throw new Error(error.message);
   }
 
-  revalidatePath(`/events/${eventId}/suppliers`);
+  revalidatePath(`/[orgId]/events/${eventId}/suppliers`, "layout");
 }
 
 // Server action to update an event supplier

@@ -8,9 +8,10 @@ import {
 } from "@/components/ui/card";
 import { EventRow } from "@/types";
 import { formatDistanceToNow } from "date-fns";
-import { MapPin, Calendar, Clock, Link } from "lucide-react";
+import { MapPin, Calendar, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
 
 export function EventCard({ event }: { event: EventRow }) {
   return (
